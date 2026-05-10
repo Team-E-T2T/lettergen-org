@@ -3,12 +3,13 @@
 /* Design system variables (use these everywhere; no ad-hoc colors) */
 :root {
   /* Colors */
-  --color-primary: 59 130 246; /* rgb(59 130 246) -> Tailwind blue-500 */
-  --color-primary-600: 37 99 235;
+  --color-primary: 29 78 216; /* #1D4ED8 */
+  --color-primary-600: 37 99 235; /* #2563EB */
   --color-muted: 100 116 139; /* gray-500 */
-  --color-bg: 248 250 252; /* slate-50 */
+  --color-bg: 248 250 252; /* #F8FAFC */
   --color-card-bg: 255 255 255; /* white */
   --color-foreground: 17 24 39; /* zinc-900 */
+  --cta-grad: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
 
   /* Radii */
   --radius-sm: 0.5rem;
@@ -29,17 +30,18 @@ html, body, #__next {
 }
 
 body {
-  background:
-    radial-gradient(circle at top left, rgba(59, 130, 246, 0.08), transparent 28%),
-    radial-gradient(circle at top right, rgba(14, 165, 233, 0.08), transparent 22%),
-    linear-gradient(180deg, rgb(255 255 255) 0%, rgb(var(--color-bg)) 100%);
+  background: linear-gradient(180deg, rgb(255 255 255) 0%, rgb(var(--color-bg)) 100%);
   color: rgb(var(--color-foreground));
-  font-family: var(--font-sans), Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+  font-family: var(--font-inter), Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
   min-height: 100%;
 }
 
 ::selection {
   background: rgba(59, 130, 246, 0.18);
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 /* Utility classes to use CSS variables with Tailwind via inline style when necessary */
@@ -62,4 +64,13 @@ body {
 .glass-border {
   border: 1px solid rgba(148, 163, 184, 0.18);
   backdrop-filter: blur(18px);
+}
+
+.cta-gradient {
+  background: var(--cta-grad);
+}
+
+.glow-lg {
+  filter: blur(36px);
+  opacity: 0.55;
 }

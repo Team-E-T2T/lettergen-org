@@ -1,16 +1,18 @@
 export default function Footer() {
   return (
-    <footer className="mt-16 w-full border-t border-slate-200/80 bg-white/70">
-      <div className="mx-auto max-w-6xl px-6 py-8 text-sm text-slate-500">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <div className="font-medium text-slate-900">LetterFlow</div>
-            <div className="mt-1">Professional letters with a sharper workflow.</div>
+    <footer className="mt-16 w-full border-t border-slate-200 bg-white">
+      <div className="mx-auto max-w-6xl px-6 py-8 text-sm text-slate-600">
+        <div className="flex flex-col items-center justify-between gap-6 sm:flex-row">
+          <div className="text-center sm:text-left">
+            <div className="text-lg font-semibold text-slate-900">LetterFlow</div>
+            <div className="mt-1">© 2026 LetterFlow. The Editorial Architect.</div>
           </div>
-          <div className="flex gap-4">
-            <a href="#" className="transition-colors hover:text-slate-900">Privacy</a>
-            <a href="#" className="transition-colors hover:text-slate-900">Terms</a>
-            <a href="#" className="transition-colors hover:text-slate-900">Contact</a>
+
+          <div className="flex flex-wrap gap-4">
+            <a href="#" className="hover:underline">Privacy Policy</a>
+            <a href="#" className="hover:underline">Terms of Service</a>
+            <a href="#" className="hover:underline">Help Center</a>
+            <a href="#" className="hover:underline">Contact Us</a>
           </div>
         </div>
       </div>

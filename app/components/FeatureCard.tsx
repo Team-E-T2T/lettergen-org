@@ -1,4 +1,6 @@
-export default function FeatureCard({ Icon, title, description }: { Icon: React.ComponentType<React.SVGProps<SVGSVGElement>>; title: string; description: string }) {
+import { LucideProps } from "lucide-react";
+
+export default function FeatureCard({ Icon, title, description }: { Icon: React.ComponentType<LucideProps>; title: string; description: string }) {
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft">
       <div className="flex items-start gap-4">

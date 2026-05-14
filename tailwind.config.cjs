@@ -14,6 +14,9 @@ module.exports = {
         card: 'rgb(var(--color-card-bg) / <alpha-value>)',
         bg: 'rgb(var(--color-bg) / <alpha-value>)',
         foreground: 'rgb(var(--color-foreground) / <alpha-value>)',
+        'brand-blue': '#0052CC',
+        'brand-bg': '#F9FAFB',
+        'brand-border': '#E5E7EB',
       },
       borderRadius: {
         xl2: '1.25rem',
@@ -21,6 +24,7 @@ module.exports = {
       boxShadow: {
         soft: '0 6px 18px rgba(16,24,40,0.06)',
         hover: '0 12px 30px rgba(16,24,40,0.12)',
+        paper: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
       },
       fontFamily: {
         sans: ['var(--font-sans)', 'Inter', 'ui-sans-serif', 'system-ui'],

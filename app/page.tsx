@@ -15,8 +15,6 @@ export default function CreationPage() {
       <div className="mx-auto max-w-7xl space-y-8">
         <header className="space-y-6">
           <div className="flex items-center gap-3 text-sm text-gray-500">
-            <Link href="/" className="hover:text-gray-900">Home</Link>
-            <span className="text-gray-300">/</span>
             <Link href="/templates" className="hover:text-gray-900">Templates</Link>
             <span className="text-gray-300">/</span>
             <span className="font-semibold text-gray-900">Fill Details</span>

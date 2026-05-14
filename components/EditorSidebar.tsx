@@ -54,7 +54,7 @@ export default function EditorSidebar() {
             Save Document
           </button>
           <div className="space-y-3">
-            <div className="rounded-[24px] border border-brand-border bg-brand-surface p-4">
+            <div className="rounded-[24px] border border-brand-border bg-slate-50 p-4">
               <p className="text-xs font-semibold uppercase tracking-[0.22em] text-gray-500">
                 Export Options
               </p>
@@ -74,7 +74,7 @@ export default function EditorSidebar() {
               </div>
             </div>
 
-            <div className="rounded-[24px] border border-brand-border bg-brand-surface p-4">
+            <div className="rounded-[24px] border border-brand-border bg-slate-50 p-4">
               <h3 className="text-xs font-semibold uppercase tracking-[0.22em] text-gray-500">
                 Document Info
               </h3>

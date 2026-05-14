@@ -58,7 +58,7 @@ function NewLetterEditor({ initialDraft }: NewLetterEditorProps) {
       <div className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-sm">
         <header className="mb-8">
           <h1 className="text-3xl font-semibold tracking-tight text-slate-950">
-            Edit Layout: {name || "New Document"}
+            New Letter: {name || "Untitled"}
           </h1>
           <p className="mt-2 text-sm text-slate-600">
             Modify the content fields below to generate your custom file.
@@ -68,7 +68,7 @@ function NewLetterEditor({ initialDraft }: NewLetterEditorProps) {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="mb-2 block text-sm font-medium text-slate-900">
-              Template Configuration Name
+              Letter Name
             </label>
             <input
               type="text"
@@ -93,7 +93,7 @@ function NewLetterEditor({ initialDraft }: NewLetterEditorProps) {
 
           <div>
             <label className="mb-2 block text-sm font-medium text-slate-900">
-              Letter Correspondence Content Body
+              Letter Content
             </label>
             <textarea
               rows={16}

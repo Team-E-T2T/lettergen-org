@@ -1,9 +1,12 @@
+"use client";
 import FeatureCard from "./components/FeatureCard";
 import TemplateCard from "./components/TemplateCard";
 import { Layout, Edit3, Download } from "lucide-react";
 import { templates as allTemplates } from "../lib/templates";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
+  const router = useRouter();
   const gallery = allTemplates.slice(0, 4);
 
   return (
@@ -80,7 +83,15 @@ export default function Home() {
 
           <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {gallery.map((t) => (
-              <TemplateCard key={t.id} category={t.category} title={t.title} description={t.description} />
+              <TemplateCard 
+                key={t.id} 
+                id={t.id}
+                category={t.category} 
+                title={t.title} 
+                description={t.description} 
+                onUse={(id) => router.push(`/new?id=${id}`)}
+                onPreview={(id) => router.push(`/templates?id=${id}`)}
+              />
             ))}
           </div>
         </section>

@@ -3,10 +3,12 @@ import { useMemo, useState } from "react";
 import { Search } from "lucide-react";
 import TemplateCard from "../components/TemplateCard";
 import { templates as allTemplates } from "../../lib/templates";
+import { useRouter } from "next/navigation";
 
 const categories = ["All", "Personal", "Government", "Office", "Bank", "Utility or household", "School", "Official"];
 
 export default function TemplatesPage() {
+  const router = useRouter();
   const [query, setQuery] = useState("");
   const [active, setActive] = useState<string>("All");
 
@@ -67,7 +69,15 @@ export default function TemplatesPage() {
         <div className="mb-4 text-sm text-slate-500">Showing {filtered.length} template{filtered.length === 1 ? '' : 's'}</div>
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((t) => (
-            <TemplateCard key={t.id} category={t.category} title={t.title} description={t.description} />
+            <TemplateCard 
+              key={t.id} 
+              id={t.id}
+              category={t.category} 
+              title={t.title} 
+              description={t.description} 
+              onUse={(id) => router.push(`/new?id=${id}`)}
+              onPreview={(id) => router.push(`/templates?id=${id}`)}
+            />
           ))}
         </div>
       </section>

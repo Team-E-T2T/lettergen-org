@@ -3,15 +3,16 @@ import { motion } from "framer-motion";
 import CategoryPill from "./CategoryPill";
 
 type TemplateCardProps = {
+  id: string | number;
   category: string;
   title: string;
   description: string;
   image?: string;
-  onUse?: () => void;
-  onPreview?: () => void;
+  onUse?: (id: string | number) => void;
+  onPreview?: (id: string | number) => void;
 };
 
-export default function TemplateCard({ category, title, description }: TemplateCardProps) {
+export default function TemplateCard({ id, category, title, description, onUse, onPreview }: TemplateCardProps) {
   return (
     <motion.article
       whileHover={{ scale: 1.02 }}
@@ -33,10 +34,26 @@ export default function TemplateCard({ category, title, description }: TemplateC
       </div>
 
       <div className="mt-4 flex items-center gap-3">
-        <button className="rounded-full bg-slate-950 px-4 py-2 text-sm font-medium text-white transition-transform hover:-translate-y-0.5">
+        {/* Added explicit mouse/pointer capture to bypass animation locks */}
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
+            onUse?.(id);
+          }}
+          onPointerDownCapture={(e) => e.stopPropagation()}
+          className="relative z-10 rounded-full bg-slate-950 px-4 py-2 text-sm font-medium text-white transition-transform hover:-translate-y-0.5 cursor-pointer"
+        >
           Use Template
         </button>
-        <button className="text-sm font-medium text-slate-500 transition-colors hover:text-slate-950">
+        
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
+            onPreview?.(id);
+          }}
+          onPointerDownCapture={(e) => e.stopPropagation()}
+          className="relative z-10 text-sm font-medium text-slate-500 transition-colors hover:text-slate-950 cursor-pointer"
+        >
           Preview
         </button>
       </div>

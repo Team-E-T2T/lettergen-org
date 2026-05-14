@@ -3,6 +3,7 @@ export type Template = {
   category: string;
   title: string;
   description: string;
+  content?: string;
 };
 
 export const templates: Template[] = [

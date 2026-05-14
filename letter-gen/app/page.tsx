@@ -26,7 +26,7 @@ export default function Home() {
 
             <div className="flex flex-wrap gap-4">
               <a href="/new" className="rounded-full px-6 py-3 text-sm font-semibold text-white" style={{ background: 'linear-gradient(135deg,#2563EB,#1D4ED8)' }}>
-                Start
+                New Letter
               </a>
               <a href="/templates" className="rounded-full border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700">
                 View Templates

@@ -36,7 +36,7 @@ export default function PreviewEditPage() {
           <div className="flex items-center gap-3 text-sm text-gray-500">
             <Link href="/" className="hover:text-gray-900">Home</Link>
             <span className="text-gray-300">/</span>
-            <Link href="/templates" className="hover:text-gray-900">Templates</Link>
+            <Link href="/" className="hover:text-gray-900">Choose Template</Link>
             <span className="text-gray-300">/</span>
             <span className="font-semibold text-gray-900">Preview & Edit</span>
           </div>

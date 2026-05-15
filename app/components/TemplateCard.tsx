@@ -1,8 +1,10 @@
 "use client";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 import CategoryPill from "./CategoryPill";
 
 type TemplateCardProps = {
+  templateId: string;
   category: string;
   title: string;
   description: string;
@@ -11,7 +13,27 @@ type TemplateCardProps = {
   onPreview?: () => void;
 };
 
-export default function TemplateCard({ category, title, description }: TemplateCardProps) {
+export default function TemplateCard({ templateId, category, title, description, onUse, onPreview }: TemplateCardProps) {
+  const router = useRouter();
+
+  const handleUse = () => {
+    if (onUse) {
+      onUse();
+      return;
+    }
+
+    router.push(`/new?id=${templateId}`);
+  };
+
+  const handlePreview = () => {
+    if (onPreview) {
+      onPreview();
+      return;
+    }
+
+    router.push("/preview");
+  };
+
   return (
     <motion.article
       whileHover={{ scale: 1.02 }}
@@ -33,10 +55,10 @@ export default function TemplateCard({ category, title, description }: TemplateC
       </div>
 
       <div className="mt-4 flex items-center gap-3">
-        <button className="rounded-full bg-slate-950 px-4 py-2 text-sm font-medium text-white transition-transform hover:-translate-y-0.5">
+        <button onClick={handleUse} className="rounded-full bg-slate-950 px-4 py-2 text-sm font-medium text-white transition-transform hover:-translate-y-0.5">
           Use Template
         </button>
-        <button className="text-sm font-medium text-slate-500 transition-colors hover:text-slate-950">
+        <button onClick={handlePreview} className="text-sm font-medium text-slate-500 transition-colors hover:text-slate-950">
           Preview
         </button>
       </div>

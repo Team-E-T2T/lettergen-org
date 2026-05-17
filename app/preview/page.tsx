@@ -1,9 +1,16 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import EditorSidebar from '@/components/EditorSidebar';
 import ToolbarButton from '@/components/ToolbarButton';
+
+interface LetterData {
+  senderInfo: { fullName: string; email: string; address: string };
+  recipientDetails: { name: string; company: string; address: string };
+  letterPurpose: { subject: string; tone: string; closing: string; body: string };
+  currentDate: string;
+}
 
 const toolbarActions = [
   { label: 'Bold', icon: <span className="text-base font-semibold">B</span>, command: 'bold' },
@@ -17,6 +24,41 @@ const toolbarActions = [
 
 export default function PreviewEditPage() {
   const [activeFormat, setActiveFormat] = useState('bold');
+  const [letterData, setLetterData] = useState<LetterData | null>(null);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('letterData');
+    if (saved) {
+      setLetterData(JSON.parse(saved));
+    }
+  }, []);
+
+  const formattedLetter = useMemo(() => {
+    if (!letterData) return null;
+
+    const { senderInfo, recipientDetails, letterPurpose, currentDate } = letterData;
+    const opening =
+      letterPurpose.tone === "friendly"
+        ? "I hope you are doing well as you read this request."
+        : "I am contacting you to formally request your attention and support on the following matter.";
+
+    const requestText = letterPurpose.body
+      ? letterPurpose.body.trim()
+      : "Please let me know how we can move forward together on the items described in the subject line.";
+
+    return {
+      senderAddress: senderInfo.address || "Your Address",
+      senderName: senderInfo.fullName || "Your Name",
+      date: currentDate,
+      recipientName: recipientDetails.name || "Recipient Name",
+      recipientCompany: recipientDetails.company || "Company / Organization",
+      recipientAddress: recipientDetails.address || "Recipient Address",
+      subject: letterPurpose.subject || "Formal Request for Collaboration",
+      greeting: recipientDetails.name ? `Dear ${recipientDetails.name},` : "Dear [Recipient Name],",
+      body: `${opening}\n\n${requestText}\n\nThank you for your time and consideration. Please feel free to reach out if you need any clarification or additional details.`,
+      closing: letterPurpose.closing === "best" ? "Best regards," : "Sincerely,",
+    };
+  }, [letterData]);
 
   const handleToolbarClick = (action: (typeof toolbarActions)[0]) => {
     setActiveFormat(action.label);
@@ -73,38 +115,39 @@ export default function PreviewEditPage() {
                   contentEditable
                   suppressContentEditableWarning
                 >
-                  <div className="flex flex-col gap-1 text-sm text-gray-900">
-                    <span>April 07, 2026</span>
-                  </div>
-                  <div className="mt-8 space-y-5">
-                    <div className="space-y-1">
-                      <p className="text-sm text-gray-900">Ms. Elena Vance</p>
-                      <p className="text-sm text-gray-900">Director of Editorial Strategy</p>
-                      <p className="text-sm text-gray-900">Lumina Publishing House</p>
-                      <p className="text-sm text-gray-900">1223 Horizon Blvd, Suite 400</p>
-                      <p className="text-sm text-gray-900">New York, NY 10014</p>
-                    </div>
+                  {formattedLetter ? (
+                    <div className="flex flex-col gap-4 text-sm text-gray-900">
+                      <div className="flex flex-col gap-1">
+                        <p>{formattedLetter.senderName}</p>
+                        <p>{formattedLetter.senderAddress}</p>
+                      </div>
 
-                    <p className="text-sm text-gray-900">Dear Ms. Vance,</p>
+                      <p>{formattedLetter.date}</p>
 
-                    <div className="space-y-5 text-sm text-gray-900">
-                      <p>
-                        I am writing to formally submit my interest in the Senior Narrative Architect position at Lumina Publishing House. Having followed your editorial direction for several years, I am deeply impressed by the consistent elegance and structural integrity of the long-form features produced under your leadership.
-                      </p>
-                      <p>
-                        In my previous role at The Daily Chronicle, I specialized in transforming complex data sets into evocative human stories. This required not only a mastery of language but a keen eye for architectural pacing—ensuring that the reader&apos;s journey is as informative as it is emotionally resonant. My work on the &ldquo;Urban Echoes&rdquo; series received national acclaim for its innovative approach to documentary-style reporting.
-                      </p>
-                      <p>
-                        I believe that my background in linguistic precision and narrative structure aligns perfectly with Lumina&apos;s vision for the next generation of digital storytelling. I look forward to the possibility of discussing how my skills can contribute to your upcoming portfolio projects.
-                      </p>
-                    </div>
+                      <div className="space-y-1">
+                        <p>{formattedLetter.recipientName}</p>
+                        <p>{formattedLetter.recipientCompany}</p>
+                        <p>{formattedLetter.recipientAddress}</p>
+                      </div>
 
-                    <div className="space-y-1">
-                      <p>Sincerely,</p>
-                      <p className="font-semibold text-brand-blue">Arthur Sterling</p>
-                      <p className="text-sm text-gray-900">Editorial Consultant</p>
+                      <p>{formattedLetter.subject}</p>
+
+                      <p>{formattedLetter.greeting}</p>
+
+                      <div className="whitespace-pre-wrap">
+                        {formattedLetter.body}
+                      </div>
+
+                      <div className="space-y-1">
+                        <p>{formattedLetter.closing}</p>
+                        <p>{formattedLetter.senderName}</p>
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="flex flex-col gap-1 text-sm text-gray-900">
+                      <span>Loading letter...</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

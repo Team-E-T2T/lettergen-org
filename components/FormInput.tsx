@@ -11,6 +11,8 @@ interface Props {
   type?: 'text' | 'email' | 'select' | 'textarea';
   name?: string;
   options?: Option[];
+  value?: string;
+  onChange?: React.ChangeEventHandler<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>;
 }
 
 export default function FormInput({
@@ -19,6 +21,8 @@ export default function FormInput({
   type = 'text',
   name,
   options,
+  value,
+  onChange,
 }: Props) {
   const baseStyles =
     'w-full rounded-xl border border-brand-border bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-transparent focus:ring-2 focus:ring-brand-blue';
@@ -33,23 +37,33 @@ export default function FormInput({
           name={name}
           placeholder={placeholder}
           className={`${baseStyles} min-h-[140px] resize-none`}
+          value={value}
+          onChange={onChange}
         />
-      
-) : type === 'select' ? (
-  <select name={name} className={baseStyles} defaultValue="">
-    <option value="" disabled>{placeholder || "Select an option"}</option>
-    {options?.map((option) => (
-      <option key={option.value} value={option.value}>
-        {option.label}
-      </option>
-    ))}
-  </select>
-) : (
+      ) : type === 'select' ? (
+        <select
+          name={name}
+          className={baseStyles}
+          value={value ?? ""}
+          onChange={onChange}
+        >
+          <option value="" disabled>
+            {placeholder || "Select an option"}
+          </option>
+          {options?.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      ) : (
         <input
           type={type}
           name={name}
           placeholder={placeholder}
           className={baseStyles}
+          value={value}
+          onChange={onChange}
         />
       )}
     </div>

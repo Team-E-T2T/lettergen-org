@@ -18,20 +18,20 @@ export default function Header() {
               <a href="#features" className="hover:text-slate-900">Features</a>
             </li>
             <li>
-              <a href="/templates" className="hover:text-slate-900">Templates</a>
+              <Link href="/" className="hover:text-slate-900">Templates</Link>
             </li>
           </ul>
         </nav>
 
         <div className="flex items-center gap-4">
-          <a href="/signin" className="text-sm text-slate-600 hover:underline">Sign In</a>
-          <a
-            href="/signup"
+          <Link href="/signin" className="text-sm text-slate-600 hover:underline">Sign In</Link>
+          <Link
+            href="/new"
             className="rounded-full px-4 py-2 text-sm font-semibold text-white"
             style={{ background: 'linear-gradient(135deg,#2563EB,#1D4ED8)' }}
           >
             Get Started
-          </a>
+          </Link>
         </div>
       </div>
     </header>

@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import FormInput from "@/components/FormInput";
 import { templates as allTemplates } from "@/lib/templates";
 
+export const dynamic = 'force-dynamic';
+
 function getSelectedTemplateTitle(templateId: string) {
   if (!templateId) {
     return "Formal Request Letter";

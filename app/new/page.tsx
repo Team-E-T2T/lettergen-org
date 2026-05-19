@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import FormInput from "@/components/FormInput";
@@ -15,7 +15,7 @@ function getSelectedTemplateTitle(templateId: string) {
   return selectedTemplate?.title ?? "Formal Request Letter";
 }
 
-export default function NewPage() {
+function NewPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const templateId = searchParams.get("id") ?? "";
@@ -152,5 +152,13 @@ export default function NewPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function NewPage() {
+  return (
+    <Suspense fallback={null}>
+      <NewPageContent />
+    </Suspense>
   );
 }

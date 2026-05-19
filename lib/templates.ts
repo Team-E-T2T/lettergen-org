@@ -10,7 +10,7 @@ export const templates: Template[] = [
   {
     id: '1',
     category: 'Personal',
-    title: 'Executive Partnership',
+    title: 'Formal Request Letter',
     description: 'A polished inquiry for high-level business collaborations and strategic partnerships.',
   },
   {

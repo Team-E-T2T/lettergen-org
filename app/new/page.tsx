@@ -1,31 +1,29 @@
-import { Suspense } from 'react';
 "use client";
 
-import { useState, useMemo } from "react";
+import React, { useState, useMemo, Suspense } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import FormInput from "@/components/FormInput";
 import { templates as allTemplates } from "@/lib/templates";
 
-function getSelectedTemplateTitle(templateId: string) {
+function getSelectedTemplateTitle(templateId) {
   if (!templateId) {
     return "Formal Request Letter";
   }
-
   const selectedTemplate = allTemplates.find((template) => template.id === templateId);
   return selectedTemplate?.title ?? "Formal Request Letter";
 }
 
-const formatDate = (date: Date) =>
+const formatDate = (date) =>
   date.toLocaleDateString("en-US", {
     month: "long",
     day: "numeric",
     year: "numeric",
   });
 
-export default function NewPage() {
+function LetterFormContent() {
   const router = useRouter();
-  const letterTitle = useMemo(() => getSelectedTemplateTitle("") , []);
+  const letterTitle = useMemo(() => getSelectedTemplateTitle(""), []);
 
   const [senderInfo, setSenderInfo] = useState({
     fullName: "",
@@ -58,11 +56,7 @@ export default function NewPage() {
       ? letterPurpose.body.trim()
       : "Please let me know how we can move forward together on the items described in the subject line.";
 
-    return `${opening}
-
-${requestText}
-
-Thank you for your time and consideration. Please feel free to reach out if you need any clarification or additional details.`;
+    return `${opening}\n\n${requestText}\n\nThank you for your time and consideration. Please feel free to reach out if you need any clarification or additional details.`;
   }, [letterPurpose.body, letterPurpose.tone]);
 
   const handleGenerate = () => {
@@ -72,7 +66,7 @@ Thank you for your time and consideration. Please feel free to reach out if you 
       letterPurpose,
       currentDate,
     };
-    localStorage.setItem('letterData', JSON.stringify(letterData));
+    localStorage.setItem("letterData", JSON.stringify(letterData));
     router.push("/preview");
   };
 
@@ -270,5 +264,13 @@ Thank you for your time and consideration. Please feel free to reach out if you 
         </div>
       </div>
     </div>
+  );
+}
+
+export default function NewPage() {
+  return (
+    <Suspense fallback={<div className="p-10 text-center text-gray-500">Loading form details...</div>}>
+      <LetterFormContent />
+    </Suspense>
   );
 }

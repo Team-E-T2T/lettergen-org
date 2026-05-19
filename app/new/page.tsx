@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import FormInput from "@/components/FormInput";
 import { templates as allTemplates } from "@/lib/templates";
 
-function getSelectedTemplateTitle(templateId) {
+function getSelectedTemplateTitle(templateId: string | null) {
   if (!templateId) {
     return "Formal Request Letter";
   }
@@ -14,7 +14,7 @@ function getSelectedTemplateTitle(templateId) {
   return selectedTemplate?.title ?? "Formal Request Letter";
 }
 
-const formatDate = (date) =>
+const formatDate = (date: Date) =>
   date.toLocaleDateString("en-US", {
     month: "long",
     day: "numeric",

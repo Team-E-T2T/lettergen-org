@@ -5,6 +5,8 @@ import { useState, useEffect, useMemo } from 'react';
 import EditorSidebar from '@/components/EditorSidebar';
 import ToolbarButton from '@/components/ToolbarButton';
 
+export const dynamic = 'force-dynamic';
+
 interface LetterData {
   senderInfo: { fullName: string; email: string; address: string };
   recipientDetails: { name: string; company: string; address: string };

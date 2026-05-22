@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import EditorSidebar from '@/components/EditorSidebar';
 import ToolbarButton from '@/components/ToolbarButton';
+import { useFormData } from '@/hooks/useFormData';
 
 const toolbarActions = [
   { label: 'Bold', icon: <span className="text-base font-semibold">B</span>, command: 'bold' },
@@ -17,6 +18,7 @@ const toolbarActions = [
 
 export default function PreviewEditPage() {
   const [activeFormat, setActiveFormat] = useState('bold');
+  const { formData } = useFormData();
 
   const handleToolbarClick = (action: (typeof toolbarActions)[0]) => {
     setActiveFormat(action.label);
@@ -28,6 +30,12 @@ export default function PreviewEditPage() {
       }
     }
   };
+
+  const today = new Date().toLocaleDateString('en-US', { 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  });
 
   return (
     <div className="min-h-screen bg-brand-bg px-6 py-8">
@@ -74,35 +82,37 @@ export default function PreviewEditPage() {
                   suppressContentEditableWarning
                 >
                   <div className="flex flex-col gap-1 text-sm text-gray-900">
-                    <span>April 07, 2026</span>
+                    <span>{today}</span>
                   </div>
                   <div className="mt-8 space-y-5">
                     <div className="space-y-1">
-                      <p className="text-sm text-gray-900">Ms. Elena Vance</p>
-                      <p className="text-sm text-gray-900">Director of Editorial Strategy</p>
-                      <p className="text-sm text-gray-900">Lumina Publishing House</p>
-                      <p className="text-sm text-gray-900">1223 Horizon Blvd, Suite 400</p>
-                      <p className="text-sm text-gray-900">New York, NY 10014</p>
+                      <p className="text-sm text-gray-900">{formData.recipientName || 'Recipient Name'}</p>
+                      {formData.company && <p className="text-sm text-gray-900">{formData.company}</p>}
+                      {formData.recipientAddress && (
+                        formData.recipientAddress.split('\n').map((line, idx) => (
+                          <p key={idx} className="text-sm text-gray-900">{line}</p>
+                        ))
+                      )}
                     </div>
 
-                    <p className="text-sm text-gray-900">Dear Ms. Vance,</p>
+                    <p className="text-sm text-gray-900">Dear {formData.recipientName?.split(' ')[0] || 'Recipient'},</p>
 
                     <div className="space-y-5 text-sm text-gray-900">
-                      <p>
-                        I am writing to formally submit my interest in the Senior Narrative Architect position at Lumina Publishing House. Having followed your editorial direction for several years, I am deeply impressed by the consistent elegance and structural integrity of the long-form features produced under your leadership.
-                      </p>
-                      <p>
-                        In my previous role at The Daily Chronicle, I specialized in transforming complex data sets into evocative human stories. This required not only a mastery of language but a keen eye for architectural pacing—ensuring that the reader&apos;s journey is as informative as it is emotionally resonant. My work on the &ldquo;Urban Echoes&rdquo; series received national acclaim for its innovative approach to documentary-style reporting.
-                      </p>
-                      <p>
-                        I believe that my background in linguistic precision and narrative structure aligns perfectly with Lumina&apos;s vision for the next generation of digital storytelling. I look forward to the possibility of discussing how my skills can contribute to your upcoming portfolio projects.
-                      </p>
+                      {formData.subjectLine && (
+                        <p className="font-semibold">Re: {formData.subjectLine}</p>
+                      )}
+                      {formData.letterBody ? (
+                        <p>{formData.letterBody}</p>
+                      ) : (
+                        <p className="text-gray-400 italic">Your letter content will appear here. Add details in the form to generate your letter.</p>
+                      )}
                     </div>
 
-                    <div className="space-y-1">
-                      <p>Sincerely,</p>
-                      <p className="font-semibold text-brand-blue">Arthur Sterling</p>
-                      <p className="text-sm text-gray-900">Editorial Consultant</p>
+                    <div className="mt-8 space-y-3">
+                      <p className="text-sm text-gray-900">Sincerely,</p>
+                      <p className="text-sm text-gray-900 font-semibold">{formData.fullName || 'Your Name'}</p>
+                      {formData.email && <p className="text-sm text-gray-900">{formData.email}</p>}
+                      {formData.mailingAddress && <p className="text-sm text-gray-900">{formData.mailingAddress}</p>}
                     </div>
                   </div>
                 </div>

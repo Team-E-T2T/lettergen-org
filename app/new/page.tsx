@@ -1,20 +1,19 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import FormInput from "@/components/FormInput";
-import { templates as allTemplates } from "@/lib/templates";
 
 export const dynamic = 'force-dynamic';
 
-function getSelectedTemplateTitle(templateId: string) {
-  if (!templateId) {
-    return "Formal Request Letter";
-  }
-
-  const selectedTemplate = allTemplates.find((template) => template.id === templateId);
-  return selectedTemplate?.title ?? "Formal Request Letter";
+interface Template {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  defaultToneOptions?: string[];
+  defaultClosingOptions?: string[];
 }
 
 const formatDate = (date: Date) =>
@@ -26,7 +25,36 @@ const formatDate = (date: Date) =>
 
 export default function NewPage() {
   const router = useRouter();
-  const letterTitle = useMemo(() => getSelectedTemplateTitle("") , []);
+  const searchParams = useSearchParams();
+  const templateId = searchParams.get("id") || "";
+
+  const [template, setTemplate] = useState<Template | null>(null);
+  const [templateLoading, setTemplateLoading] = useState(!!templateId);
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  // Fetch template details
+  useEffect(() => {
+    if (!templateId) {
+      setTemplateLoading(false);
+      return;
+    }
+
+    const fetchTemplate = async () => {
+      try {
+        const response = await fetch(`/api/templates/${templateId}`);
+        if (!response.ok) throw new Error("Failed to fetch template");
+        const data = await response.json();
+        setTemplate(data.template);
+      } catch (error) {
+        console.error("Failed to fetch template:", error);
+        setTemplate(null);
+      } finally {
+        setTemplateLoading(false);
+      }
+    };
+
+    fetchTemplate();
+  }, [templateId]);
 
   const [senderInfo, setSenderInfo] = useState({
     fullName: "",
@@ -66,15 +94,69 @@ ${requestText}
 Thank you for your time and consideration. Please feel free to reach out if you need any clarification or additional details.`;
   }, [letterPurpose.body, letterPurpose.tone]);
 
-  const handleGenerate = () => {
-    const letterData = {
-      senderInfo,
-      recipientDetails,
-      letterPurpose,
-      currentDate,
-    };
-    localStorage.setItem('letterData', JSON.stringify(letterData));
-    router.push("/preview");
+  const toneOptions = useMemo(
+    () => template?.defaultToneOptions?.map(t => ({ value: t, label: t })) || [
+      { value: "formal", label: "Formal & Professional" },
+      { value: "friendly", label: "Friendly & Clear" },
+    ],
+    [template]
+  );
+
+  const closingOptions = useMemo(
+    () => template?.defaultClosingOptions?.map(c => ({ value: c, label: c })) || [
+      { value: "sincerely", label: "Sincerely," },
+      { value: "best", label: "Best regards," },
+    ],
+    [template]
+  );
+
+  const handleGenerate = async () => {
+    if (!templateId) {
+      alert("Template ID is required");
+      return;
+    }
+
+    if (!senderInfo.fullName || !recipientDetails.name || !letterPurpose.subject) {
+      alert("Please fill in Full Name, Recipient Name, and Subject Line");
+      return;
+    }
+
+    setIsGenerating(true);
+    try {
+      const response = await fetch("/api/letters/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          templateId,
+          senderFullName: senderInfo.fullName,
+          senderEmail: senderInfo.email,
+          senderMailingAddress: senderInfo.address,
+          recipientName: recipientDetails.name,
+          recipientOrganization: recipientDetails.company,
+          recipientAddress: recipientDetails.address,
+          subjectLine: letterPurpose.subject,
+          letterTone: letterPurpose.tone,
+          preferredClosing: letterPurpose.closing,
+          mainPoints: letterPurpose.body,
+        }),
+      });
+
+      if (!response.ok) throw new Error("Failed to generate letter");
+
+      const data = await response.json();
+      const draftId = data.draftId;
+
+      // Save draftId to sessionStorage for preview page
+      sessionStorage.setItem("currentDraftId", draftId);
+
+      // Navigate to preview with draftId
+      router.push(`/preview?draftId=${draftId}`);
+    } catch (error) {
+      console.error("Error generating letter:", error);
+      alert("Failed to generate letter. Please try again.");
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   return (
@@ -88,7 +170,9 @@ Thank you for your time and consideration. Please feel free to reach out if you 
           </div>
 
           <div className="rounded-[32px] bg-white p-8 shadow-paper border border-[#E5E7EB]">
-            <h1 className="text-3xl font-semibold tracking-tight text-gray-900">{letterTitle}</h1>
+            <h1 className="text-3xl font-semibold tracking-tight text-gray-900">
+              {templateLoading ? "Loading..." : template?.title || "Formal Request Letter"}
+            </h1>
             <p className="mt-3 max-w-3xl text-sm leading-6 text-gray-600">
               Fill in the details below to architect a professional request that commands attention and clarity.
             </p>
@@ -184,10 +268,7 @@ Thank you for your time and consideration. Please feel free to reach out if you 
                       placeholder="Formal & Professional"
                       value={letterPurpose.tone}
                       onChange={(e) => setLetterPurpose({ ...letterPurpose, tone: e.target.value })}
-                      options={[
-                        { value: "formal", label: "Formal & Professional" },
-                        { value: "friendly", label: "Friendly & Clear" },
-                      ]}
+                      options={toneOptions}
                     />
                     <FormInput
                       label="Preferred Closing"
@@ -196,10 +277,7 @@ Thank you for your time and consideration. Please feel free to reach out if you 
                       placeholder="Sincerely,"
                       value={letterPurpose.closing}
                       onChange={(e) => setLetterPurpose({ ...letterPurpose, closing: e.target.value })}
-                      options={[
-                        { value: "sincerely", label: "Sincerely," },
-                        { value: "best", label: "Best regards," },
-                      ]}
+                      options={closingOptions}
                     />
                   </div>
                   <FormInput
@@ -216,9 +294,10 @@ Thank you for your time and consideration. Please feel free to reach out if you 
             <div className="mt-10 flex flex-col gap-3">
               <button
                 onClick={handleGenerate}
-                className="inline-flex items-center justify-center rounded-full bg-[#0052CC] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#003EA1] max-w-fit"
+                disabled={isGenerating || templateLoading}
+                className="inline-flex items-center justify-center rounded-full bg-[#0052CC] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#003EA1] disabled:bg-gray-400 disabled:cursor-not-allowed max-w-fit"
               >
-                Generate Letter
+                {isGenerating ? "Generating..." : "Generate Letter"}
               </button>
               <p className="text-xs text-gray-500">LetterFlow AI will optimize for clarity and tone.</p>
             </div>

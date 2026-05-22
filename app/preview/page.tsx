@@ -1,17 +1,21 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import EditorSidebar from '@/components/EditorSidebar';
 import ToolbarButton from '@/components/ToolbarButton';
 
 export const dynamic = 'force-dynamic';
 
-interface LetterData {
-  senderInfo: { fullName: string; email: string; address: string };
-  recipientDetails: { name: string; company: string; address: string };
-  letterPurpose: { subject: string; tone: string; closing: string; body: string };
-  currentDate: string;
+interface Draft {
+  draftId: string;
+  documentName: string;
+  contentHtml: string;
+  templateName: string;
+  category: string;
+  lastEditedAt: string;
+  wordCount: number;
 }
 
 const toolbarActions = [
@@ -25,42 +29,40 @@ const toolbarActions = [
 ];
 
 export default function PreviewEditPage() {
+  const searchParams = useSearchParams();
+  const draftId = searchParams.get('draftId') || '';
+
   const [activeFormat, setActiveFormat] = useState('bold');
-  const [letterData, setLetterData] = useState<LetterData | null>(null);
+  const [draft, setDraft] = useState<Draft | null>(null);
+  const [loading, setLoading] = useState(!!draftId);
+  const [error, setError] = useState('');
+  const [contentHtml, setContentHtml] = useState('');
 
   useEffect(() => {
-    const saved = localStorage.getItem('letterData');
-    if (saved) {
-      setLetterData(JSON.parse(saved));
+    if (!draftId) {
+      setLoading(false);
+      return;
     }
-  }, []);
 
-  const formattedLetter = useMemo(() => {
-    if (!letterData) return null;
-
-    const { senderInfo, recipientDetails, letterPurpose, currentDate } = letterData;
-    const opening =
-      letterPurpose.tone === "friendly"
-        ? "I hope you are doing well as you read this request."
-        : "I am contacting you to formally request your attention and support on the following matter.";
-
-    const requestText = letterPurpose.body
-      ? letterPurpose.body.trim()
-      : "Please let me know how we can move forward together on the items described in the subject line.";
-
-    return {
-      senderAddress: senderInfo.address || "Your Address",
-      senderName: senderInfo.fullName || "Your Name",
-      date: currentDate,
-      recipientName: recipientDetails.name || "Recipient Name",
-      recipientCompany: recipientDetails.company || "Company / Organization",
-      recipientAddress: recipientDetails.address || "Recipient Address",
-      subject: letterPurpose.subject || "Formal Request for Collaboration",
-      greeting: recipientDetails.name ? `Dear ${recipientDetails.name},` : "Dear [Recipient Name],",
-      body: `${opening}\n\n${requestText}\n\nThank you for your time and consideration. Please feel free to reach out if you need any clarification or additional details.`,
-      closing: letterPurpose.closing === "best" ? "Best regards," : "Sincerely,",
+    const fetchDraft = async () => {
+      try {
+        const response = await fetch(`/api/letters/${draftId}`);
+        if (!response.ok) throw new Error('Failed to fetch draft');
+        const data = await response.json();
+        setDraft(data);
+        setContentHtml(data.contentHtml || '');
+        setError('');
+      } catch (err) {
+        console.error('Failed to fetch draft:', err);
+        setError('Failed to load draft');
+        setDraft(null);
+      } finally {
+        setLoading(false);
+      }
     };
-  }, [letterData]);
+
+    fetchDraft();
+  }, [draftId]);
 
   const handleToolbarClick = (action: (typeof toolbarActions)[0]) => {
     setActiveFormat(action.label);
@@ -72,6 +74,33 @@ export default function PreviewEditPage() {
       }
     }
   };
+
+  const handleContentChange = (html: string) => {
+    setContentHtml(html);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-brand-bg px-6 py-8 flex items-center justify-center">
+        <p className="text-gray-500">Loading draft...</p>
+      </div>
+    );
+  }
+
+  if (error || !draft) {
+    return (
+      <div className="min-h-screen bg-brand-bg px-6 py-8">
+        <div className="mx-auto max-w-7xl">
+          <div className="rounded-lg bg-red-50 p-4 text-red-700">
+            {error || "Draft not found"}
+          </div>
+          <Link href="/" className="mt-4 text-blue-600 hover:underline">
+            Back to templates
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-brand-bg px-6 py-8">
@@ -116,46 +145,14 @@ export default function PreviewEditPage() {
                   className="min-h-[680px] rounded-[24px] border border-brand-border bg-white p-8 text-sm leading-7 text-gray-900 shadow-sm font-sans"
                   contentEditable
                   suppressContentEditableWarning
-                >
-                  {formattedLetter ? (
-                    <div className="flex flex-col gap-4 text-sm text-gray-900">
-                      <div className="flex flex-col gap-1">
-                        <p>{formattedLetter.senderName}</p>
-                        <p>{formattedLetter.senderAddress}</p>
-                      </div>
-
-                      <p>{formattedLetter.date}</p>
-
-                      <div className="space-y-1">
-                        <p>{formattedLetter.recipientName}</p>
-                        <p>{formattedLetter.recipientCompany}</p>
-                        <p>{formattedLetter.recipientAddress}</p>
-                      </div>
-
-                      <p>{formattedLetter.subject}</p>
-
-                      <p>{formattedLetter.greeting}</p>
-
-                      <div className="whitespace-pre-wrap">
-                        {formattedLetter.body}
-                      </div>
-
-                      <div className="space-y-1">
-                        <p>{formattedLetter.closing}</p>
-                        <p>{formattedLetter.senderName}</p>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col gap-1 text-sm text-gray-900">
-                      <span>Loading letter...</span>
-                    </div>
-                  )}
-                </div>
+                  onInput={(e) => handleContentChange(e.currentTarget.innerHTML)}
+                  dangerouslySetInnerHTML={{ __html: contentHtml }}
+                />
               </div>
             </div>
           </section>
 
-          <EditorSidebar />
+          <EditorSidebar draftId={draftId} documentName={draft?.documentName} contentHtml={contentHtml} />
         </div>
       </div>
     </div>

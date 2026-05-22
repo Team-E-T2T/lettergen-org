@@ -1,24 +1,55 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Search } from "lucide-react";
 import TemplateCard from "./components/TemplateCard";
-import { templates as allTemplates } from "@/lib/templates";
+
+interface Template {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+}
 
 const categories = ["All", "Personal", "Government", "Office", "Bank", "Utility or household", "School", "Official"];
 
 export default function HomePage() {
   const [query, setQuery] = useState("");
   const [active, setActive] = useState<string>("All");
+  const [templates, setTemplates] = useState<Template[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  // Fetch templates from API
+  useEffect(() => {
+    const fetchTemplates = async () => {
+      try {
+        setLoading(true);
+        const params = new URLSearchParams();
+        if (active !== "All") params.append("category", active);
+        if (query) params.append("search", query);
+
+        const response = await fetch(`/api/templates?${params}`);
+        if (!response.ok) throw new Error("Failed to fetch templates");
+
+        const data = await response.json();
+        setTemplates(data.templates || []);
+        setError("");
+      } catch (err) {
+        setError("Failed to load templates");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const timer = setTimeout(fetchTemplates, 300); // Debounce
+    return () => clearTimeout(timer);
+  }, [query, active]);
 
   const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return allTemplates.filter((t) => {
-      const matchCategory = active === "All" || (active === "Utility or household" ? t.category === "Utility or household" : t.category === active);
-      const matchQuery = !q || t.title.toLowerCase().includes(q) || t.description.toLowerCase().includes(q) || t.category.toLowerCase().includes(q);
-      return matchCategory && matchQuery;
-    });
-  }, [query, active]);
+    return templates;
+  }, [templates]);
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-12 sm:py-16">
@@ -65,12 +96,31 @@ export default function HomePage() {
       </section>
 
       <section className="mt-8">
-        <div className="mb-4 text-sm text-slate-500">Showing {filtered.length} template{filtered.length === 1 ? "" : "s"}</div>
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((t) => (
-            <TemplateCard key={t.id} templateId={t.id} category={t.category} title={t.title} description={t.description} />
-          ))}
-        </div>
+        {error && (
+          <div className="mb-4 rounded-lg bg-red-50 p-4 text-sm text-red-700">
+            {error}
+          </div>
+        )}
+        {loading ? (
+          <div className="text-center text-slate-500">Loading templates...</div>
+        ) : (
+          <>
+            <div className="mb-4 text-sm text-slate-500">
+              Showing {filtered.length} template{filtered.length === 1 ? "" : "s"}
+            </div>
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {filtered.map((t) => (
+                <TemplateCard
+                  key={t.id}
+                  templateId={t.id}
+                  category={t.category}
+                  title={t.title}
+                  description={t.description}
+                />
+              ))}
+            </div>
+          </>
+        )}
       </section>
     </div>
   );

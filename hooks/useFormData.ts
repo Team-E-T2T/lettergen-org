@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 
 export type FormData = {
+  /** The backend template ID selected by the user — needed for POST /letters/generate */
+  templateId: string;
   fullName: string;
   email: string;
   mailingAddress: string;
@@ -9,30 +11,35 @@ export type FormData = {
   recipientAddress: string;
   subjectLine: string;
   letterTone: string;
+  preferredClosing: string;
   letterBody: string;
 };
 
 const STORAGE_KEY = 'lettergen_form_data';
 
+const EMPTY_FORM: FormData = {
+  templateId: '',
+  fullName: '',
+  email: '',
+  mailingAddress: '',
+  recipientName: '',
+  company: '',
+  recipientAddress: '',
+  subjectLine: '',
+  letterTone: '',
+  preferredClosing: '',
+  letterBody: '',
+};
+
 export function useFormData() {
-  const [formData, setFormData] = useState<FormData>({
-    fullName: '',
-    email: '',
-    mailingAddress: '',
-    recipientName: '',
-    company: '',
-    recipientAddress: '',
-    subjectLine: '',
-    letterTone: 'formal',
-    letterBody: '',
-  });
+  const [formData, setFormData] = useState<FormData>(EMPTY_FORM);
 
   // Load from localStorage on mount
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
       try {
-        setFormData(JSON.parse(stored));
+        setFormData({ ...EMPTY_FORM, ...JSON.parse(stored) });
       } catch (error) {
         console.error('Failed to parse form data:', error);
       }
@@ -49,17 +56,7 @@ export function useFormData() {
   };
 
   const clearFormData = () => {
-    setFormData({
-      fullName: '',
-      email: '',
-      mailingAddress: '',
-      recipientName: '',
-      company: '',
-      recipientAddress: '',
-      subjectLine: '',
-      letterTone: 'formal',
-      letterBody: '',
-    });
+    setFormData(EMPTY_FORM);
     localStorage.removeItem(STORAGE_KEY);
   };
 

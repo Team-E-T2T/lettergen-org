@@ -12,7 +12,11 @@ interface Props {
   name?: string;
   options?: Option[];
   value?: string;
+<<<<<<< HEAD
   onChange?: (value: string) => void;
+=======
+  onChange?: React.ChangeEventHandler<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>;
+>>>>>>> origin/nimsara_updated
 }
 
 export default function FormInput({
@@ -21,7 +25,11 @@ export default function FormInput({
   type = 'text',
   name,
   options,
+<<<<<<< HEAD
   value = '',
+=======
+  value,
+>>>>>>> origin/nimsara_updated
   onChange,
 }: Props) {
   const baseStyles =
@@ -43,7 +51,10 @@ export default function FormInput({
           value={value}
           onChange={handleChange}
           className={`${baseStyles} min-h-[140px] resize-none`}
+          value={value}
+          onChange={onChange}
         />
+<<<<<<< HEAD
       
 ) : type === 'select' ? (
   <select name={name} value={value} onChange={handleChange} className={baseStyles}>
@@ -55,6 +66,25 @@ export default function FormInput({
     ))}
   </select>
 ) : (
+=======
+      ) : type === 'select' ? (
+        <select
+          name={name}
+          className={baseStyles}
+          value={value ?? ""}
+          onChange={onChange}
+        >
+          <option value="" disabled>
+            {placeholder || "Select an option"}
+          </option>
+          {options?.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      ) : (
+>>>>>>> origin/nimsara_updated
         <input
           type={type}
           name={name}
@@ -62,6 +92,8 @@ export default function FormInput({
           onChange={handleChange}
           placeholder={placeholder}
           className={baseStyles}
+          value={value}
+          onChange={onChange}
         />
       )}
     </div>

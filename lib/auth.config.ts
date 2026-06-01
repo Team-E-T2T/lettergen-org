@@ -1,7 +1,6 @@
-import type { NextAuthConfig } from "next-auth";
 import Google from "next-auth/providers/google";
 
-export const authConfig: NextAuthConfig = {
+export const authConfig = {
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID || "",
@@ -13,10 +12,10 @@ export const authConfig: NextAuthConfig = {
     error: "/signin",
   },
   callbacks: {
-    authorized({ auth }) {
+    authorized({ auth }: { auth?: { user?: unknown } | null }) {
       return !!auth?.user;
     },
-    async redirect({ url, baseUrl }) {
+    async redirect({ url, baseUrl }: { url: string; baseUrl: string }) {
       // Allow callback URLs on same origin
       if (url.startsWith("/")) return `${baseUrl}${url}`;
       // Allow callback URLs on same origin

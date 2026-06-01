@@ -1,3 +1,4 @@
+import type { User } from "next-auth";
 import Google from "next-auth/providers/google";
 
 export const authConfig = {
@@ -12,7 +13,7 @@ export const authConfig = {
     error: "/signin",
   },
   callbacks: {
-    authorized({ auth }: { auth?: { user?: unknown } | null }) {
+    authorized({ auth }: { auth?: { user?: User | null } | null }) {
       return !!auth?.user;
     },
     async redirect({ url, baseUrl }: { url: string; baseUrl: string }) {

@@ -1,9 +1,22 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import EditorSidebar from '@/components/EditorSidebar';
 import ToolbarButton from '@/components/ToolbarButton';
+
+export const dynamic = 'force-dynamic';
+
+interface Draft {
+  draftId: string;
+  documentName: string;
+  contentHtml: string;
+  templateName: string;
+  category: string;
+  lastEditedAt: string;
+  wordCount: number;
+}
 
 const toolbarActions = [
   { label: 'Bold', icon: <span className="text-base font-semibold">B</span>, command: 'bold' },
@@ -16,7 +29,39 @@ const toolbarActions = [
 ];
 
 export default function PreviewEditPage() {
+  const searchParams = useSearchParams();
+  const draftId = searchParams.get('draftId') || '';
+
   const [activeFormat, setActiveFormat] = useState('bold');
+  const [draft, setDraft] = useState<Draft | null>(null);
+  const [loading, setLoading] = useState(!!draftId);
+  const [error, setError] = useState('');
+  const [contentHtml, setContentHtml] = useState('');
+
+  useEffect(() => {
+    if (!draftId) {
+      return;
+    }
+
+    const fetchDraft = async () => {
+      try {
+        const response = await fetch(`/api/letters/${draftId}`);
+        if (!response.ok) throw new Error('Failed to fetch draft');
+        const data = await response.json();
+        setDraft(data);
+        setContentHtml(data.contentHtml || '');
+        setError('');
+      } catch (err) {
+        console.error('Failed to fetch draft:', err);
+        setError('Failed to load draft');
+        setDraft(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDraft();
+  }, [draftId]);
 
   const handleToolbarClick = (action: (typeof toolbarActions)[0]) => {
     setActiveFormat(action.label);
@@ -28,6 +73,33 @@ export default function PreviewEditPage() {
       }
     }
   };
+
+  const handleContentChange = (html: string) => {
+    setContentHtml(html);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-brand-bg px-6 py-8 flex items-center justify-center">
+        <p className="text-gray-500">Loading draft...</p>
+      </div>
+    );
+  }
+
+  if (error || !draft) {
+    return (
+      <div className="min-h-screen bg-brand-bg px-6 py-8">
+        <div className="mx-auto max-w-7xl">
+          <div className="rounded-lg bg-red-50 p-4 text-red-700">
+            {error || "Draft not found"}
+          </div>
+          <Link href="/" className="mt-4 text-blue-600 hover:underline">
+            Back to templates
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-brand-bg px-6 py-8">
@@ -72,45 +144,14 @@ export default function PreviewEditPage() {
                   className="min-h-[680px] rounded-[24px] border border-brand-border bg-white p-8 text-sm leading-7 text-gray-900 shadow-sm font-sans"
                   contentEditable
                   suppressContentEditableWarning
-                >
-                  <div className="flex flex-col gap-1 text-sm text-gray-900">
-                    <span>April 07, 2026</span>
-                  </div>
-                  <div className="mt-8 space-y-5">
-                    <div className="space-y-1">
-                      <p className="text-sm text-gray-900">Ms. Elena Vance</p>
-                      <p className="text-sm text-gray-900">Director of Editorial Strategy</p>
-                      <p className="text-sm text-gray-900">Lumina Publishing House</p>
-                      <p className="text-sm text-gray-900">1223 Horizon Blvd, Suite 400</p>
-                      <p className="text-sm text-gray-900">New York, NY 10014</p>
-                    </div>
-
-                    <p className="text-sm text-gray-900">Dear Ms. Vance,</p>
-
-                    <div className="space-y-5 text-sm text-gray-900">
-                      <p>
-                        I am writing to formally submit my interest in the Senior Narrative Architect position at Lumina Publishing House. Having followed your editorial direction for several years, I am deeply impressed by the consistent elegance and structural integrity of the long-form features produced under your leadership.
-                      </p>
-                      <p>
-                        In my previous role at The Daily Chronicle, I specialized in transforming complex data sets into evocative human stories. This required not only a mastery of language but a keen eye for architectural pacing—ensuring that the reader&apos;s journey is as informative as it is emotionally resonant. My work on the &ldquo;Urban Echoes&rdquo; series received national acclaim for its innovative approach to documentary-style reporting.
-                      </p>
-                      <p>
-                        I believe that my background in linguistic precision and narrative structure aligns perfectly with Lumina&apos;s vision for the next generation of digital storytelling. I look forward to the possibility of discussing how my skills can contribute to your upcoming portfolio projects.
-                      </p>
-                    </div>
-
-                    <div className="space-y-1">
-                      <p>Sincerely,</p>
-                      <p className="font-semibold text-brand-blue">Arthur Sterling</p>
-                      <p className="text-sm text-gray-900">Editorial Consultant</p>
-                    </div>
-                  </div>
-                </div>
+                  onInput={(e) => handleContentChange(e.currentTarget.innerHTML)}
+                  dangerouslySetInnerHTML={{ __html: contentHtml }}
+                />
               </div>
             </div>
           </section>
 
-          <EditorSidebar />
+          <EditorSidebar draftId={draftId} documentName={draft?.documentName} contentHtml={contentHtml} />
         </div>
       </div>
     </div>

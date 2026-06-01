@@ -2,33 +2,104 @@
 
 import { useState } from 'react';
 
-export default function EditorSidebar() {
-  const [documentName, setDocumentName] = useState('Cover_Letter_Lumina_V2');
+interface EditorSidebarProps {
+  draftId?: string;
+  documentName?: string;
+  contentHtml?: string;
+}
+
+export default function EditorSidebar({ draftId, documentName = 'Letter', contentHtml = '' }: EditorSidebarProps) {
+  const [docName, setDocName] = useState(documentName);
   const [saveStatus, setSaveStatus] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
-  const handleSaveDocument = () => {
+  const handleSaveDocument = async () => {
+    if (!draftId) {
+      alert('No draft loaded');
+      return;
+    }
+
     setSaveStatus('Saving...');
-    const editorContent = document.querySelector('[contentEditable="true"]')?.innerHTML;
-    const docData = {
-      name: documentName,
-      content: editorContent,
-      timestamp: new Date().toISOString(),
-    };
-    
-    // Save to localStorage
-    localStorage.setItem('letterDocument', JSON.stringify(docData));
-    console.log('Document saved:', docData);
-    
-    setSaveStatus('Saved!');
-    setTimeout(() => setSaveStatus(''), 2000);
+    setIsSaving(true);
+
+    try {
+      const editorContent = document.querySelector('[contentEditable="true"]')?.innerHTML || contentHtml;
+      
+      const response = await fetch(`/api/letters/${draftId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          documentName: docName,
+          contentHtml: editorContent,
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to save');
+
+      setSaveStatus('Saved!');
+      setTimeout(() => setSaveStatus(''), 2000);
+    } catch (error) {
+      console.error('Save error:', error);
+      setSaveStatus('Save failed');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const handlePDFExport = () => {
-    alert('PDF export functionality coming soon!');
+  const handlePDFExport = async () => {
+    if (!draftId) {
+      alert('No draft loaded');
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/letters/${draftId}/export`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          format: 'pdf',
+          fileName: docName,
+        }),
+      });
+
+      if (!response.ok) throw new Error('Export failed');
+
+      const data = await response.json();
+      if (data.downloadUrl) {
+        window.open(data.downloadUrl, '_blank');
+      }
+    } catch (error) {
+      console.error('PDF export error:', error);
+      alert('Failed to export PDF');
+    }
   };
 
-  const handleDOCXExport = () => {
-    alert('DOCX export functionality coming soon!');
+  const handleDOCXExport = async () => {
+    if (!draftId) {
+      alert('No draft loaded');
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/letters/${draftId}/export`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          format: 'docx',
+          fileName: docName,
+        }),
+      });
+
+      if (!response.ok) throw new Error('Export failed');
+
+      const data = await response.json();
+      if (data.downloadUrl) {
+        window.open(data.downloadUrl, '_blank');
+      }
+    } catch (error) {
+      console.error('DOCX export error:', error);
+      alert('Failed to export DOCX');
+    }
   };
 
   return (
@@ -41,18 +112,25 @@ export default function EditorSidebar() {
             </label>
             <input
               type="text"
-              value={documentName}
-              onChange={(e) => setDocumentName(e.target.value)}
-              className="w-full rounded-xl border border-brand-border bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-transparent focus:ring-2 focus:ring-brand-blue"
+              value={docName}
+              onChange={(e) => setDocName(e.target.value)}
+              disabled={!draftId}
+              className="w-full rounded-xl border border-brand-border bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-transparent focus:ring-2 focus:ring-brand-blue disabled:bg-gray-100 disabled:cursor-not-allowed"
             />
           </div>
           <button
             onClick={handleSaveDocument}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-brand-blue px-6 py-3 text-sm font-semibold text-white transition hover:bg-brand-blue/90"
+            disabled={!draftId || isSaving}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-brand-blue px-6 py-3 text-sm font-semibold text-white transition hover:bg-brand-blue/90 disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
             <span className="text-base">💾</span>
-            Save Document
+            {isSaving ? 'Saving...' : 'Save Document'}
           </button>
+          {saveStatus && (
+            <div className="text-sm text-green-600 text-center">
+              {saveStatus}
+            </div>
+          )}
           <div className="space-y-3">
             <div className="rounded-[24px] border border-brand-border bg-slate-50 p-4">
               <p className="text-xs font-semibold uppercase tracking-[0.22em] text-gray-500">
@@ -61,13 +139,15 @@ export default function EditorSidebar() {
               <div className="mt-4 grid grid-cols-2 gap-3">
                 <button
                   onClick={handlePDFExport}
-                  className="inline-flex items-center justify-center rounded-full border border-brand-border bg-white px-4 py-3 text-sm font-semibold text-gray-700 transition hover:border-gray-300 hover:bg-gray-50"
+                  disabled={!draftId}
+                  className="inline-flex items-center justify-center rounded-full border border-brand-border bg-white px-4 py-3 text-sm font-semibold text-gray-700 transition hover:border-gray-300 hover:bg-gray-50 disabled:bg-gray-100 disabled:cursor-not-allowed"
                 >
                   📄 PDF Export
                 </button>
                 <button
                   onClick={handleDOCXExport}
-                  className="inline-flex items-center justify-center rounded-full border border-brand-border bg-white px-4 py-3 text-sm font-semibold text-gray-700 transition hover:border-gray-300 hover:bg-gray-50"
+                  disabled={!draftId}
+                  className="inline-flex items-center justify-center rounded-full border border-brand-border bg-white px-4 py-3 text-sm font-semibold text-gray-700 transition hover:border-gray-300 hover:bg-gray-50 disabled:bg-gray-100 disabled:cursor-not-allowed"
                 >
                   📋 DOCX Format
                 </button>
@@ -80,20 +160,16 @@ export default function EditorSidebar() {
               </h3>
               <div className="mt-4 space-y-3 text-sm text-gray-600">
                 <div className="flex items-center justify-between rounded-2xl bg-white px-4 py-3">
-                  <span className="font-semibold text-gray-900">Template</span>
-                  <span className="text-gray-500">Modern Executive</span>
+                  <span className="font-semibold text-gray-900">Draft ID</span>
+                  <span className="text-gray-500 font-mono text-xs">{draftId?.slice(0, 6) || 'N/A'}</span>
                 </div>
                 <div className="flex items-center justify-between rounded-2xl bg-white px-4 py-3">
-                  <span className="font-semibold text-gray-900">Category</span>
-                  <span className="text-gray-500">Business / Professional</span>
+                  <span className="font-semibold text-gray-900">Document Name</span>
+                  <span className="text-gray-500">{docName}</span>
                 </div>
                 <div className="flex items-center justify-between rounded-2xl bg-white px-4 py-3">
                   <span className="font-semibold text-gray-900">Last Edited</span>
-                  <span className="text-gray-500">Today, 2:45 PM</span>
-                </div>
-                <div className="flex items-center justify-between rounded-2xl bg-white px-4 py-3">
-                  <span className="font-semibold text-gray-900">Word Count</span>
-                  <span className="text-gray-500">248 words</span>
+                  <span className="text-gray-500">Just now</span>
                 </div>
               </div>
             </div>

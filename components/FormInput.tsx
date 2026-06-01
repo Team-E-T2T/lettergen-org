@@ -12,11 +12,7 @@ interface Props {
   name?: string;
   options?: Option[];
   value?: string;
-<<<<<<< HEAD
-  onChange?: (value: string) => void;
-=======
   onChange?: React.ChangeEventHandler<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>;
->>>>>>> origin/nimsara_updated
 }
 
 export default function FormInput({
@@ -25,19 +21,11 @@ export default function FormInput({
   type = 'text',
   name,
   options,
-<<<<<<< HEAD
-  value = '',
-=======
   value,
->>>>>>> origin/nimsara_updated
   onChange,
 }: Props) {
   const baseStyles =
     'w-full rounded-xl border border-brand-border bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-transparent focus:ring-2 focus:ring-brand-blue';
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    onChange?.(e.target.value);
-  };
 
   return (
     <div className="flex flex-col gap-2">
@@ -48,25 +36,10 @@ export default function FormInput({
         <textarea
           name={name}
           placeholder={placeholder}
-          value={value}
-          onChange={handleChange}
           className={`${baseStyles} min-h-[140px] resize-none`}
           value={value}
           onChange={onChange}
         />
-<<<<<<< HEAD
-      
-) : type === 'select' ? (
-  <select name={name} value={value} onChange={handleChange} className={baseStyles}>
-    <option value="">{placeholder || "Select an option"}</option>
-    {options?.map((option) => (
-      <option key={option.value} value={option.value}>
-        {option.label}
-      </option>
-    ))}
-  </select>
-) : (
-=======
       ) : type === 'select' ? (
         <select
           name={name}
@@ -84,12 +57,9 @@ export default function FormInput({
           ))}
         </select>
       ) : (
->>>>>>> origin/nimsara_updated
         <input
           type={type}
           name={name}
-          value={value}
-          onChange={handleChange}
           placeholder={placeholder}
           className={baseStyles}
           value={value}

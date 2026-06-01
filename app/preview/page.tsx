@@ -5,7 +5,6 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import EditorSidebar from '@/components/EditorSidebar';
 import ToolbarButton from '@/components/ToolbarButton';
-import { useFormData } from '@/hooks/useFormData';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,9 +33,6 @@ export default function PreviewEditPage() {
   const draftId = searchParams.get('draftId') || '';
 
   const [activeFormat, setActiveFormat] = useState('bold');
-<<<<<<< HEAD
-  const { formData } = useFormData();
-=======
   const [draft, setDraft] = useState<Draft | null>(null);
   const [loading, setLoading] = useState(!!draftId);
   const [error, setError] = useState('');
@@ -44,7 +40,6 @@ export default function PreviewEditPage() {
 
   useEffect(() => {
     if (!draftId) {
-      setLoading(false);
       return;
     }
 
@@ -67,7 +62,6 @@ export default function PreviewEditPage() {
 
     fetchDraft();
   }, [draftId]);
->>>>>>> origin/nimsara_updated
 
   const handleToolbarClick = (action: (typeof toolbarActions)[0]) => {
     setActiveFormat(action.label);
@@ -80,13 +74,6 @@ export default function PreviewEditPage() {
     }
   };
 
-<<<<<<< HEAD
-  const today = new Date().toLocaleDateString('en-US', { 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric' 
-  });
-=======
   const handleContentChange = (html: string) => {
     setContentHtml(html);
   };
@@ -113,7 +100,6 @@ export default function PreviewEditPage() {
       </div>
     );
   }
->>>>>>> origin/nimsara_updated
 
   return (
     <div className="min-h-screen bg-brand-bg px-6 py-8">
@@ -158,48 +144,9 @@ export default function PreviewEditPage() {
                   className="min-h-[680px] rounded-[24px] border border-brand-border bg-white p-8 text-sm leading-7 text-gray-900 shadow-sm font-sans"
                   contentEditable
                   suppressContentEditableWarning
-<<<<<<< HEAD
-                >
-                  <div className="flex flex-col gap-1 text-sm text-gray-900">
-                    <span>{today}</span>
-                  </div>
-                  <div className="mt-8 space-y-5">
-                    <div className="space-y-1">
-                      <p className="text-sm text-gray-900">{formData.recipientName || 'Recipient Name'}</p>
-                      {formData.company && <p className="text-sm text-gray-900">{formData.company}</p>}
-                      {formData.recipientAddress && (
-                        formData.recipientAddress.split('\n').map((line, idx) => (
-                          <p key={idx} className="text-sm text-gray-900">{line}</p>
-                        ))
-                      )}
-                    </div>
-
-                    <p className="text-sm text-gray-900">Dear {formData.recipientName?.split(' ')[0] || 'Recipient'},</p>
-
-                    <div className="space-y-5 text-sm text-gray-900">
-                      {formData.subjectLine && (
-                        <p className="font-semibold">Re: {formData.subjectLine}</p>
-                      )}
-                      {formData.letterBody ? (
-                        <p>{formData.letterBody}</p>
-                      ) : (
-                        <p className="text-gray-400 italic">Your letter content will appear here. Add details in the form to generate your letter.</p>
-                      )}
-                    </div>
-
-                    <div className="mt-8 space-y-3">
-                      <p className="text-sm text-gray-900">Sincerely,</p>
-                      <p className="text-sm text-gray-900 font-semibold">{formData.fullName || 'Your Name'}</p>
-                      {formData.email && <p className="text-sm text-gray-900">{formData.email}</p>}
-                      {formData.mailingAddress && <p className="text-sm text-gray-900">{formData.mailingAddress}</p>}
-                    </div>
-                  </div>
-                </div>
-=======
                   onInput={(e) => handleContentChange(e.currentTarget.innerHTML)}
                   dangerouslySetInnerHTML={{ __html: contentHtml }}
                 />
->>>>>>> origin/nimsara_updated
               </div>
             </div>
           </section>

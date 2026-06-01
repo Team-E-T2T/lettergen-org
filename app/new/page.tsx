@@ -1,40 +1,5 @@
-/**
- * /new?id={templateId}  — "Fill Details" page (Step 2)
- *
- * This is a Server Component. It reads the `id` query parameter, fetches the
- * full template record from the backend, and passes it to the client-side form.
- *
- * No 'use client' — data fetching happens on the Node.js server so the browser
- * never needs to talk directly to the backend for this initial load.
- */
+"use client";
 
-<<<<<<< HEAD
-import { notFound } from 'next/navigation';
-import { getTemplate } from '@/lib/api';
-import NewLetterForm from './NewLetterForm';
-
-export default async function NewPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}) {
-  const { id } = await searchParams;
-
-  // No template ID in the URL → nothing to show.
-  if (!id || typeof id !== 'string') {
-    notFound();
-  }
-
-  // Fetch the template from the backend on the server (Node.js, not the browser).
-  const template = await getTemplate(id);
-
-  // Template not found in the backend → show the 404 page.
-  if (template === null) {
-    notFound();
-  }
-
-  return <NewLetterForm template={template} />;
-=======
 import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -70,7 +35,6 @@ export default function NewPage() {
   // Fetch template details
   useEffect(() => {
     if (!templateId) {
-      setTemplateLoading(false);
       return;
     }
 
@@ -386,5 +350,4 @@ Thank you for your time and consideration. Please feel free to reach out if you 
       </div>
     </div>
   );
->>>>>>> origin/nimsara_updated
 }

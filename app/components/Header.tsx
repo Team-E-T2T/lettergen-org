@@ -27,7 +27,6 @@ export default function Header() {
         </nav>
 
         <div className="flex items-center gap-4">
-<<<<<<< HEAD
           {!loading && (
             <>
               {session?.user ? (
@@ -56,16 +55,6 @@ export default function Header() {
               )}
             </>
           )}
-=======
-          <Link href="/signin" className="text-sm text-slate-600 hover:underline">Sign In</Link>
-          <Link
-            href="/new"
-            className="rounded-full px-4 py-2 text-sm font-semibold text-white"
-            style={{ background: 'linear-gradient(135deg,#2563EB,#1D4ED8)' }}
-          >
-            Get Started
-          </Link>
->>>>>>> origin/nimsara_updated
         </div>
       </div>
     </header>

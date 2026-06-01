@@ -82,21 +82,21 @@ export default function NewLetterForm({ template }: Props) {
                     label="Full Name"
                     placeholder="Johnathan Doe"
                     value={formData.fullName}
-                    onChange={(value) => updateFormData({ fullName: value })}
+                    onChange={(e) => updateFormData({ fullName: e.target.value })}
                   />
                   <FormInput
                     label="Email Address"
                     placeholder="john@architect.com"
                     type="email"
                     value={formData.email}
-                    onChange={(value) => updateFormData({ email: value })}
+                    onChange={(e) => updateFormData({ email: e.target.value })}
                   />
                   <div className="md:col-span-2">
                     <FormInput
                       label="Mailing Address"
                       placeholder="123 Editorial Way, Suite 400, New York, NY"
                       value={formData.mailingAddress}
-                      onChange={(value) => updateFormData({ mailingAddress: value })}
+                      onChange={(e) => updateFormData({ mailingAddress: e.target.value })}
                     />
                   </div>
                 </div>
@@ -115,13 +115,13 @@ export default function NewLetterForm({ template }: Props) {
                     label="Recipient Name"
                     placeholder="Sarah Jenkins"
                     value={formData.recipientName}
-                    onChange={(value) => updateFormData({ recipientName: value })}
+                    onChange={(e) => updateFormData({ recipientName: e.target.value })}
                   />
                   <FormInput
                     label="Company / Organization"
                     placeholder="Global Editorial Corp"
                     value={formData.company}
-                    onChange={(value) => updateFormData({ company: value })}
+                    onChange={(e) => updateFormData({ company: e.target.value })}
                   />
                   <div className="md:col-span-2">
                     <FormInput
@@ -129,7 +129,7 @@ export default function NewLetterForm({ template }: Props) {
                       placeholder="456 Corporate Plaza, Los Angeles, CA"
                       type="textarea"
                       value={formData.recipientAddress}
-                      onChange={(value) => updateFormData({ recipientAddress: value })}
+                      onChange={(e) => updateFormData({ recipientAddress: e.target.value })}
                     />
                   </div>
                 </div>
@@ -148,7 +148,7 @@ export default function NewLetterForm({ template }: Props) {
                     label="Subject Line"
                     placeholder="Formal Request for Project Review"
                     value={formData.subjectLine}
-                    onChange={(value) => updateFormData({ subjectLine: value })}
+                    onChange={(e) => updateFormData({ subjectLine: e.target.value })}
                   />
                   <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                     {/* Letter Tone — options come from the backend template */}
@@ -158,7 +158,7 @@ export default function NewLetterForm({ template }: Props) {
                       name="letterTone"
                       placeholder="Select tone"
                       value={formData.letterTone}
-                      onChange={(value) => updateFormData({ letterTone: value })}
+                      onChange={(e) => updateFormData({ letterTone: e.target.value })}
                       options={toneOptions}
                     />
                     {/* Preferred Closing — options come from the backend template */}
@@ -168,7 +168,7 @@ export default function NewLetterForm({ template }: Props) {
                       name="preferredClosing"
                       placeholder="Select closing"
                       value={formData.preferredClosing}
-                      onChange={(value) => updateFormData({ preferredClosing: value })}
+                      onChange={(e) => updateFormData({ preferredClosing: e.target.value })}
                       options={closingOptions}
                     />
                   </div>
@@ -177,7 +177,7 @@ export default function NewLetterForm({ template }: Props) {
                     type="textarea"
                     placeholder="Outline the core of your request here. Our AI will weave these into a polished narrative..."
                     value={formData.letterBody}
-                    onChange={(value) => updateFormData({ letterBody: value })}
+                    onChange={(e) => updateFormData({ letterBody: e.target.value })}
                   />
                 </div>
               </div>

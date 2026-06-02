@@ -9,7 +9,7 @@
  */
 
 import { notFound } from 'next/navigation';
-import { getTemplate } from '@/lib/api';
+import { getTemplate, listTemplates } from '@/lib/api';
 import NewLetterForm from './NewLetterForm';
 
 export default async function NewPage({
@@ -19,15 +19,18 @@ export default async function NewPage({
 }) {
   const { id } = await searchParams;
 
-  // No template ID in the URL → nothing to show.
-  if (!id || typeof id !== 'string') {
-    notFound();
+  let templateId = typeof id === 'string' ? id : undefined;
+
+  if (!templateId) {
+    const result = await listTemplates({ limit: 1 });
+    if (!result.templates.length) {
+      notFound();
+    }
+    templateId = result.templates[0].id;
   }
 
-  // Fetch the template from the backend on the server (Node.js, not the browser).
-  const template = await getTemplate(id);
+  const template = await getTemplate(templateId);
 
-  // Template not found in the backend → show the 404 page.
   if (template === null) {
     notFound();
   }

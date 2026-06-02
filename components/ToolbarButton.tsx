@@ -2,7 +2,7 @@ import React from 'react';
 
 interface ToolbarButtonProps {
   label: string;
-  icon: React.ReactNode;
+  icon?: React.ReactNode;
   active?: boolean;
   onClick?: () => void;
   command?: string;
@@ -34,7 +34,7 @@ export default function ToolbarButton({
       }`}
     >
       {icon}
-      <span className="sr-only">{label}</span>
+      <span className={icon ? 'sr-only' : ''}>{label}</span>
     </button>
   );
 }

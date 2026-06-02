@@ -10,7 +10,7 @@
 
 const BACKEND_URL =
   process.env.BACKEND_URL ??
-  'https://lettergen-513500384322.us-central1.run.app';
+  'http://127.0.0.1:8000';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -102,6 +102,114 @@ export async function listTemplates(opts?: {
  *
  * Returns all available template category strings.
  */
+export type Draft = {
+  draftId: string;
+  documentName: string;
+  contentHtml: string;
+  templateName: string;
+  category: string;
+  lastEditedAt: string;
+  wordCount: number;
+};
+
+export async function getDraft(draftId: string): Promise<Draft | null> {
+  const res = await fetch(`${BACKEND_URL}/letters/${encodeURIComponent(draftId)}`, {
+    cache: 'no-store',
+  });
+
+  if (res.status === 404) return null;
+
+  if (!res.ok) {
+    throw new Error(
+      `Backend error fetching draft "${draftId}": ${res.status} ${res.statusText}`,
+    );
+  }
+
+  return res.json() as Promise<Draft>;
+}
+
+export type GeneratedDraft = {
+  draftId: string;
+  documentName: string;
+  contentHtml: string;
+  contentText: string;
+  template: {
+    id: string;
+    title: string;
+    category: string;
+  };
+  templateName: string;
+  category: string;
+  createdAt: string;
+  updatedAt: string;
+  lastEditedAt: string;
+  wordCount: number;
+};
+
+export async function generateLetter(payload: {
+  templateId: string;
+  senderFullName: string;
+  senderEmail: string;
+  senderMailingAddress: string;
+  recipientName: string;
+  recipientOrganization: string;
+  recipientAddress: string;
+  subjectLine: string;
+  letterTone: string;
+  preferredClosing: string;
+  mainPoints: string;
+}): Promise<GeneratedDraft | null> {
+  const res = await fetch('/api/letters/generate', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+    cache: 'no-store',
+  });
+
+  if (res.status === 404) return null;
+
+  if (!res.ok) {
+    throw new Error(
+      `Backend error generating letter: ${res.status} ${res.statusText}`,
+    );
+  }
+
+  return res.json() as Promise<GeneratedDraft>;
+}
+
+export type UpdateDraftResult = {
+  success: true;
+  draftId: string;
+  updatedAt: string;
+  wordCount: number;
+};
+
+export async function updateDraft(
+  draftId: string,
+  payload: { documentName: string; contentHtml: string; updatedAt?: string },
+): Promise<UpdateDraftResult | null> {
+  const res = await fetch(`${BACKEND_URL}/letters/${encodeURIComponent(draftId)}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+    cache: 'no-store',
+  });
+
+  if (res.status === 404) return null;
+
+  if (!res.ok) {
+    throw new Error(
+      `Backend error updating draft "${draftId}": ${res.status} ${res.statusText}`,
+    );
+  }
+
+  return res.json() as Promise<UpdateDraftResult>;
+}
+
 export async function listCategories(): Promise<string[]> {
   const res = await fetch(`${BACKEND_URL}/template-categories`, {
     cache: 'no-store',

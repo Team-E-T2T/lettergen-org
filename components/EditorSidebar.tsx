@@ -1,105 +1,103 @@
 'use client';
 
-import { useState } from 'react';
+import ToolbarButton from '@/components/ToolbarButton';
 
-export default function EditorSidebar() {
-  const [documentName, setDocumentName] = useState('Cover_Letter_Lumina_V2');
-  const [saveStatus, setSaveStatus] = useState('');
+type EditorSidebarProps = {
+  documentName: string;
+  onDocumentNameChange: (value: string) => void;
+  onSaveDocument: () => void;
+  saveStatus: string;
+  templateName: string;
+  category: string;
+  lastEditedAt: string;
+  wordCount: number;
+};
 
-  const handleSaveDocument = () => {
-    setSaveStatus('Saving...');
-    const editorContent = document.querySelector('[contentEditable="true"]')?.innerHTML;
-    const docData = {
-      name: documentName,
-      content: editorContent,
-      timestamp: new Date().toISOString(),
-    };
-    
-    // Save to localStorage
-    localStorage.setItem('letterDocument', JSON.stringify(docData));
-    console.log('Document saved:', docData);
-    
-    setSaveStatus('Saved!');
-    setTimeout(() => setSaveStatus(''), 2000);
-  };
-
-  const handlePDFExport = () => {
-    alert('PDF export functionality coming soon!');
-  };
-
-  const handleDOCXExport = () => {
-    alert('DOCX export functionality coming soon!');
-  };
-
+export default function EditorSidebar({
+  documentName,
+  onDocumentNameChange,
+  onSaveDocument,
+  saveStatus,
+  templateName,
+  category,
+  lastEditedAt,
+  wordCount,
+}: EditorSidebarProps) {
   return (
-    <aside className="space-y-6">
-      <section className="rounded-[32px] border border-brand-border bg-white p-8 shadow-paper">
-        <div className="space-y-6">
+    <aside className="space-y-4">
+      {/* Document Identity */}
+      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <p className="text-xs font-bold uppercase tracking-widest text-slate-500">
+          Document Identity
+        </p>
+        <div className="mt-4 space-y-3">
           <div>
-            <label className="text-[10px] font-bold uppercase tracking-[0.24em] text-gray-500 mb-2 block">
-              Document Name
+            <label className="block text-xs font-semibold text-slate-600 mb-2">
+              Document name
             </label>
             <input
               type="text"
               value={documentName}
-              onChange={(e) => setDocumentName(e.target.value)}
-              className="w-full rounded-xl border border-brand-border bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-transparent focus:ring-2 focus:ring-brand-blue"
+              onChange={(e) => onDocumentNameChange(e.target.value)}
+              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-100"
             />
           </div>
           <button
-            onClick={handleSaveDocument}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-brand-blue px-6 py-3 text-sm font-semibold text-white transition hover:bg-brand-blue/90"
+            onClick={onSaveDocument}
+            disabled={saveStatus === 'Saving...'}
+            className="w-full inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-70 disabled:cursor-not-allowed"
           >
-            <span className="text-base">💾</span>
-            Save Document
+            💾 Save Document
           </button>
-          <div className="space-y-3">
-            <div className="rounded-[24px] border border-brand-border bg-slate-50 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-gray-500">
-                Export Options
-              </p>
-              <div className="mt-4 grid grid-cols-2 gap-3">
-                <button
-                  onClick={handlePDFExport}
-                  className="inline-flex items-center justify-center rounded-full border border-brand-border bg-white px-4 py-3 text-sm font-semibold text-gray-700 transition hover:border-gray-300 hover:bg-gray-50"
-                >
-                  📄 PDF Export
-                </button>
-                <button
-                  onClick={handleDOCXExport}
-                  className="inline-flex items-center justify-center rounded-full border border-brand-border bg-white px-4 py-3 text-sm font-semibold text-gray-700 transition hover:border-gray-300 hover:bg-gray-50"
-                >
-                  📋 DOCX Format
-                </button>
-              </div>
-            </div>
+        </div>
+      </div>
 
-            <div className="rounded-[24px] border border-brand-border bg-slate-50 p-4">
-              <h3 className="text-xs font-semibold uppercase tracking-[0.22em] text-gray-500">
-                Document Info
-              </h3>
-              <div className="mt-4 space-y-3 text-sm text-gray-600">
-                <div className="flex items-center justify-between rounded-2xl bg-white px-4 py-3">
-                  <span className="font-semibold text-gray-900">Template</span>
-                  <span className="text-gray-500">Modern Executive</span>
-                </div>
-                <div className="flex items-center justify-between rounded-2xl bg-white px-4 py-3">
-                  <span className="font-semibold text-gray-900">Category</span>
-                  <span className="text-gray-500">Business / Professional</span>
-                </div>
-                <div className="flex items-center justify-between rounded-2xl bg-white px-4 py-3">
-                  <span className="font-semibold text-gray-900">Last Edited</span>
-                  <span className="text-gray-500">Today, 2:45 PM</span>
-                </div>
-                <div className="flex items-center justify-between rounded-2xl bg-white px-4 py-3">
-                  <span className="font-semibold text-gray-900">Word Count</span>
-                  <span className="text-gray-500">248 words</span>
-                </div>
-              </div>
-            </div>
+      {/* Save Status + Export */}
+      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-widest text-slate-500">
+            Save status
+          </p>
+          <p className="mt-2 text-sm text-slate-700">
+            {saveStatus || 'No changes saved yet'}
+          </p>
+        </div>
+
+        <div>
+          <p className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-3">
+            Export Options
+          </p>
+          <div className="space-y-2">
+            <ToolbarButton label="📄 PDF Export" />
+            <ToolbarButton label="📋 DOCX Format" />
           </div>
         </div>
-      </section>
+      </div>
+
+      {/* Draft Details */}
+      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <p className="text-xs font-bold uppercase tracking-widest text-slate-500">
+          Draft Details
+        </p>
+        <div className="mt-4 space-y-3 text-sm">
+          <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
+            <span className="font-semibold text-slate-900">Template</span>
+            <span className="text-slate-600">{templateName}</span>
+          </div>
+          <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
+            <span className="font-semibold text-slate-900">Category</span>
+            <span className="text-slate-600">{category}</span>
+          </div>
+          <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
+            <span className="font-semibold text-slate-900">Last Edited</span>
+            <span className="text-slate-600 text-xs">{lastEditedAt}</span>
+          </div>
+          <div className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
+            <span className="font-semibold text-slate-900">Word Count</span>
+            <span className="text-slate-600">{wordCount}</span>
+          </div>
+        </div>
+      </div>
     </aside>
   );
 }

@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import FormInput from '@/components/FormInput';
 import { useFormData } from '@/hooks/useFormData';
+import { generateLetter } from '@/lib/api';
 import type { Template } from '@/lib/api';
 
 type Props = {
@@ -14,15 +15,62 @@ type Props = {
 export default function NewLetterForm({ template }: Props) {
   const router = useRouter();
   const { formData, updateFormData } = useFormData();
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generateError, setGenerateError] = useState('');
 
-  // Persist the templateId into form state so the generate step can use it.
-  useEffect(() => {
-    updateFormData({ templateId: template.id });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [template.id]);
+  const handleGenerate = async () => {
+    setGenerateError('');
+    setIsGenerating(true);
 
-  const handleGenerate = () => {
-    router.push('/preview');
+    try {
+      // Ensure template ID is set
+      const templateId = formData.templateId || template.id;
+
+      // Validate all required fields
+      if (!templateId) throw new Error('Template ID is missing');
+      if (!formData.fullName?.trim()) throw new Error('Full name is required');
+      if (!formData.email?.trim()) throw new Error('Email is required');
+      if (!formData.mailingAddress?.trim()) throw new Error('Mailing address is required');
+      if (!formData.recipientName?.trim()) throw new Error('Recipient name is required');
+      if (!formData.company?.trim()) throw new Error('Company/Organization is required');
+      if (!formData.recipientAddress?.trim()) throw new Error('Recipient address is required');
+      if (!formData.subjectLine?.trim()) throw new Error('Subject line is required');
+      if (!formData.letterTone?.trim()) throw new Error('Letter tone is required');
+      if (!formData.preferredClosing?.trim()) throw new Error('Preferred closing is required');
+      if (!formData.letterBody?.trim()) throw new Error('Main points & content is required');
+
+      // Generate the draft — include alias keys expected by templates (no backend changes)
+      const draft = await generateLetter({
+        templateId,
+        senderFullName: formData.fullName,
+        senderEmail: formData.email,
+        senderMailingAddress: formData.mailingAddress,
+        recipientName: formData.recipientName,
+        recipientOrganization: formData.company,
+        recipientAddress: formData.recipientAddress,
+        subjectLine: formData.subjectLine,
+        letterTone: formData.letterTone,
+        preferredClosing: formData.preferredClosing,
+        mainPoints: formData.letterBody,
+        // Aliases for legacy templates
+        date: new Date().toISOString().split('T')[0],
+        name: formData.fullName,
+        address: formData.mailingAddress,
+        phone: formData.phone || '',
+        recipient_name: formData.recipientName,
+        name1: formData.recipientName,
+      });
+
+      if (!draft) {
+        throw new Error('Failed to generate letter draft');
+      }
+
+      // Navigate to preview with the draft ID
+      router.push(`/preview?draftId=${encodeURIComponent(draft.draftId)}`);
+    } catch (error) {
+      setGenerateError(error instanceof Error ? error.message : 'An error occurred');
+      setIsGenerating(false);
+    }
   };
 
   // Map the backend's defaultToneOptions array → <select> options.
@@ -184,11 +232,17 @@ export default function NewLetterForm({ template }: Props) {
             </div>
 
             <div className="mt-10 flex flex-col gap-3">
+              {generateError && (
+                <div className="rounded-lg bg-red-50 p-4 text-sm text-red-700 border border-red-200">
+                  {generateError}
+                </div>
+              )}
               <button
                 onClick={handleGenerate}
-                className="inline-flex items-center justify-center rounded-full bg-[#0052CC] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#003EA1] max-w-fit"
+                disabled={isGenerating}
+                className="inline-flex items-center justify-center rounded-full bg-[#0052CC] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#003EA1] max-w-fit disabled:opacity-70 disabled:cursor-not-allowed"
               >
-                Generate Letter
+                {isGenerating ? 'Generating...' : 'Generate Letter'}
               </button>
               <p className="text-xs text-gray-500">LetterFlow AI will optimize for clarity and tone.</p>
             </div>

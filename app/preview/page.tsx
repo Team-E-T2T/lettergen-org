@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import EditorSidebar from '@/components/EditorSidebar';
 import ToolbarButton from '@/components/ToolbarButton';
@@ -28,7 +28,7 @@ const toolbarActions = [
   { label: 'Link', icon: <span className="text-base">🔗</span>, isLink: true },
 ];
 
-export default function PreviewEditPage() {
+function PreviewEditPageContent() {
   const searchParams = useSearchParams();
   const draftId = searchParams.get('draftId') || '';
 
@@ -155,5 +155,13 @@ export default function PreviewEditPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function PreviewEditPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-brand-bg px-6 py-8" role="status" aria-live="polite"><span className="sr-only">Loading preview page</span></div>}>
+      <PreviewEditPageContent />
+    </Suspense>
   );
 }

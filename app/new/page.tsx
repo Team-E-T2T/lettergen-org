@@ -27,6 +27,7 @@ export default async function NewPage({
       notFound();
     }
     templateId = result.templates[0].id;
+  
   }
 
   const template = await getTemplate(templateId);

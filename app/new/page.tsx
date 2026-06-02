@@ -354,7 +354,7 @@ Thank you for your time and consideration. Please feel free to reach out if you 
 
 export default function NewPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-brand-bg px-6 py-8" />}>
+    <Suspense fallback={<div className="min-h-screen bg-brand-bg px-6 py-8" role="status" aria-live="polite"><span className="sr-only">Loading new letter page</span></div>}>
       <NewPageContent />
     </Suspense>
   );

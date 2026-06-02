@@ -102,7 +102,7 @@ function SignInPageContent() {
 
 export default function SignInPage() {
   return (
-    <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 px-4" />}>
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 px-4" role="status" aria-live="polite"><span className="sr-only">Loading sign in page</span></div>}>
       <SignInPageContent />
     </Suspense>
   );

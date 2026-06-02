@@ -160,7 +160,7 @@ function PreviewEditPageContent() {
 
 export default function PreviewEditPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-brand-bg px-6 py-8" />}>
+    <Suspense fallback={<div className="min-h-screen bg-brand-bg px-6 py-8" role="status" aria-live="polite"><span className="sr-only">Loading preview page</span></div>}>
       <PreviewEditPageContent />
     </Suspense>
   );

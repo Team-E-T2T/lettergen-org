@@ -3,8 +3,9 @@
 import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { Suspense } from "react";
 
-export default function SignInPage() {
+function SignInPageContent() {
   const searchParams = useSearchParams();
   const error = searchParams.get("error");
   const callbackUrl = searchParams.get("callbackUrl") || "/";
@@ -70,7 +71,7 @@ export default function SignInPage() {
           {/* Footer Links */}
           <div className="space-y-3 text-center">
             <p className="text-sm text-slate-600">
-              Don't have an account?{" "}
+              Don&apos;t have an account?{" "}
               <button
                 onClick={() =>
                   signIn("google", {
@@ -96,5 +97,13 @@ export default function SignInPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 px-4" />}>
+      <SignInPageContent />
+    </Suspense>
   );
 }

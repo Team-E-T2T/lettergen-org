@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { Suspense, useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import FormInput from "@/components/FormInput";
@@ -23,7 +23,7 @@ const formatDate = (date: Date) =>
     year: "numeric",
   });
 
-export default function NewPage() {
+function NewPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const templateId = searchParams.get("id") || "";
@@ -349,5 +349,13 @@ Thank you for your time and consideration. Please feel free to reach out if you 
         </div>
       </div>
     </div>
+  );
+}
+
+export default function NewPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-brand-bg px-6 py-8" />}>
+      <NewPageContent />
+    </Suspense>
   );
 }

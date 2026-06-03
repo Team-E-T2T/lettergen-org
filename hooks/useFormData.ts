@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 export type FormData = {
   /** The backend template ID selected by the user — needed for POST /letters/generate */
@@ -32,19 +32,19 @@ const EMPTY_FORM: FormData = {
 };
 
 export function useFormData() {
-  const [formData, setFormData] = useState<FormData>(EMPTY_FORM);
+  const [formData, setFormData] = useState<FormData>(() => {
+    if (typeof window === 'undefined') return EMPTY_FORM;
 
-  // Load from localStorage on mount
-  useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try {
-        setFormData({ ...EMPTY_FORM, ...JSON.parse(stored) });
-      } catch (error) {
-        console.error('Failed to parse form data:', error);
-      }
+    if (!stored) return EMPTY_FORM;
+
+    try {
+      return { ...EMPTY_FORM, ...JSON.parse(stored) };
+    } catch (error) {
+      console.error('Failed to parse form data:', error);
+      return EMPTY_FORM;
     }
-  }, []);
+  });
 
   // Save to localStorage whenever formData changes
   const updateFormData = (newData: Partial<FormData>) => {

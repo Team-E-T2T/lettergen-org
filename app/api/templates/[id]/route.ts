@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getTemplateById } from '@/lib/db';
+import { getTemplate } from '@/lib/api';
 
 export async function GET(
   request: NextRequest,
@@ -8,7 +8,7 @@ export async function GET(
   try {
     const { id } = await params;
 
-    const template = getTemplateById(id);
+    const template = await getTemplate(id);
 
     if (!template) {
       return NextResponse.json(

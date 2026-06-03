@@ -12,8 +12,10 @@ interface Template {
   title: string;
   description: string;
   category: string;
+  content?: string;
   defaultToneOptions?: string[];
   defaultClosingOptions?: string[];
+  formSchema?: Record<string, unknown>;
 }
 
 const formatDate = (date: Date) =>
@@ -23,6 +25,23 @@ const formatDate = (date: Date) =>
     year: "numeric",
   });
 
+const normalizeToken = (value: string) => value.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+const PLACEHOLDER_REGEX = /{{\s*([a-zA-Z0-9_-]+)\s*}}/g;
+
+const extractPlaceholders = (content: string): string[] => {
+  const found = new Set<string>();
+  for (const match of content.matchAll(PLACEHOLDER_REGEX)) {
+    if (match[1]) found.add(match[1]);
+  }
+  return Array.from(found);
+};
+
+const toLabel = (key: string) =>
+  key
+    .replace(/[_-]+/g, " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+
 function NewPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -31,29 +50,7 @@ function NewPageContent() {
   const [template, setTemplate] = useState<Template | null>(null);
   const [templateLoading, setTemplateLoading] = useState(!!templateId);
   const [isGenerating, setIsGenerating] = useState(false);
-
-  // Fetch template details
-  useEffect(() => {
-    if (!templateId) {
-      return;
-    }
-
-    const fetchTemplate = async () => {
-      try {
-        const response = await fetch(`/api/templates/${templateId}`);
-        if (!response.ok) throw new Error("Failed to fetch template");
-        const data = await response.json();
-        setTemplate(data.template);
-      } catch (error) {
-        console.error("Failed to fetch template:", error);
-        setTemplate(null);
-      } finally {
-        setTemplateLoading(false);
-      }
-    };
-
-    fetchTemplate();
-  }, [templateId]);
+  const [customFields, setCustomFields] = useState<Record<string, string>>({});
 
   const [senderInfo, setSenderInfo] = useState({
     fullName: "",
@@ -75,6 +72,104 @@ function NewPageContent() {
   });
 
   const currentDate = useMemo(() => formatDate(new Date()), []);
+
+  // Fetch template details
+  useEffect(() => {
+    if (!templateId) {
+      return;
+    }
+
+    const fetchTemplate = async () => {
+      try {
+        console.info('[new/page] Fetching template', { templateId });
+        const response = await fetch(`/api/templates/${templateId}`);
+        if (!response.ok) {
+          console.error('[new/page] Template fetch failed', {
+            templateId,
+            status: response.status,
+            statusText: response.statusText,
+          });
+          throw new Error("Failed to fetch template");
+        }
+        const data = await response.json();
+        const fetchedTemplate = data.template as Template;
+        setTemplate(fetchedTemplate);
+
+        setLetterPurpose((prev) => ({
+          subject: prev.subject,
+          tone: prev.tone || fetchedTemplate.defaultToneOptions?.[0] || 'formal',
+          closing: prev.closing || fetchedTemplate.defaultClosingOptions?.[0] || 'sincerely',
+          body: prev.body,
+        }));
+
+        console.info('[new/page] Template loaded', {
+          templateId,
+          title: fetchedTemplate.title,
+          hasContent: Boolean(fetchedTemplate.content),
+          contentLength: fetchedTemplate.content?.length ?? 0,
+        });
+      } catch (error) {
+        console.error("Failed to fetch template:", error);
+        setTemplate(null);
+      } finally {
+        setTemplateLoading(false);
+      }
+    };
+
+    fetchTemplate();
+  }, [templateId]);
+
+  const isCoreField = (key: string) => {
+    const normalized = normalizeToken(key);
+    return new Set([
+      'date',
+      'name',
+      'fullname',
+      'sendername',
+      'address',
+      'senderaddress',
+      'mailingaddress',
+      'recipientname',
+      'recipientaddress',
+      'recipientorganization',
+      'company',
+      'organization',
+      'email',
+      'senderemail',
+      'subject',
+      'subjectline',
+      'tone',
+      'closing',
+      'mainpoints',
+      'body',
+    ]).has(normalized);
+  };
+
+  const dynamicFieldKeys = useMemo(() => {
+    const schemaKeys = template?.formSchema ? Object.keys(template.formSchema) : [];
+    const placeholderKeys = template?.content ? extractPlaceholders(template.content) : [];
+    return Array.from(new Set([...schemaKeys, ...placeholderKeys])).filter((key) => !isCoreField(key));
+  }, [template]);
+
+  const getFieldValueForPlaceholder = (rawKey: string) => {
+    const normalized = normalizeToken(rawKey);
+    if (normalized === 'date') return currentDate;
+    if (normalized === 'name' || normalized === 'fullname' || normalized === 'sendername') return senderInfo.fullName;
+    if (normalized === 'address' || normalized === 'senderaddress' || normalized === 'mailingaddress') return senderInfo.address;
+    if (normalized === 'recipientname') return recipientDetails.name;
+    if (normalized === 'recipientaddress') return recipientDetails.address;
+    if (normalized === 'recipientorganization' || normalized === 'company' || normalized === 'organization') return recipientDetails.company;
+    if (normalized === 'email' || normalized === 'senderemail') return senderInfo.email;
+    if (normalized === 'subject' || normalized === 'subjectline') return letterPurpose.subject;
+    if (normalized === 'tone') return letterPurpose.tone;
+    if (normalized === 'closing') return letterPurpose.closing;
+    if (normalized === 'body' || normalized === 'mainpoints') return letterPurpose.body;
+    return customFields[rawKey] || '';
+  };
+
+  const renderedTemplateBody = template?.content
+    ? template.content.replace(PLACEHOLDER_REGEX, (_fullMatch, token: string) => getFieldValueForPlaceholder(token))
+    : '';
 
   const previewBody = useMemo(() => {
     const opening =
@@ -122,28 +217,61 @@ Thank you for your time and consideration. Please feel free to reach out if you 
 
     setIsGenerating(true);
     try {
+      const mainPoints = template?.content ? renderedTemplateBody : letterPurpose.body;
+
+      const payload = {
+        templateId,
+        senderFullName: senderInfo.fullName,
+        senderEmail: senderInfo.email,
+        senderMailingAddress: senderInfo.address,
+        recipientName: recipientDetails.name,
+        recipientOrganization: recipientDetails.company,
+        recipientAddress: recipientDetails.address,
+        subjectLine: letterPurpose.subject,
+        letterTone: letterPurpose.tone,
+        preferredClosing: letterPurpose.closing,
+        mainPoints,
+        useTemplateBody: Boolean(template?.content),
+      };
+
+      console.info('[new/page] Submitting generate request', {
+        templateId,
+        subjectLine: payload.subjectLine,
+        letterTone: payload.letterTone,
+        preferredClosing: payload.preferredClosing,
+        mainPointsLength: payload.mainPoints.length,
+        useTemplateBody: payload.useTemplateBody,
+      });
+
       const response = await fetch("/api/letters/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          templateId,
-          senderFullName: senderInfo.fullName,
-          senderEmail: senderInfo.email,
-          senderMailingAddress: senderInfo.address,
-          recipientName: recipientDetails.name,
-          recipientOrganization: recipientDetails.company,
-          recipientAddress: recipientDetails.address,
-          subjectLine: letterPurpose.subject,
-          letterTone: letterPurpose.tone,
-          preferredClosing: letterPurpose.closing,
-          mainPoints: letterPurpose.body,
-        }),
+        body: JSON.stringify(payload),
       });
 
-      if (!response.ok) throw new Error("Failed to generate letter");
+      if (!response.ok) {
+        let errorDetails: unknown = null;
+        try {
+          errorDetails = await response.json();
+        } catch {
+          errorDetails = await response.text();
+        }
+        console.error('[new/page] Generate request failed', {
+          status: response.status,
+          statusText: response.statusText,
+          errorDetails,
+        });
+        throw new Error("Failed to generate letter");
+      }
 
       const data = await response.json();
       const draftId = data.draftId;
+
+      console.info('[new/page] Generate request succeeded', {
+        draftId,
+        documentName: data.documentName,
+        wordCount: data.wordCount,
+      });
 
       // Save draftId to sessionStorage for preview page
       sessionStorage.setItem("currentDraftId", draftId);
@@ -250,6 +378,35 @@ Thank you for your time and consideration. Please feel free to reach out if you 
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#EAF1FF] text-sm font-semibold text-[#0052CC]">
                     03
                   </div>
+                  <h2 className="text-lg font-semibold text-gray-900">Template Fields</h2>
+                </div>
+                <div className="space-y-6">
+                  {dynamicFieldKeys.length > 0 ? (
+                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                      {dynamicFieldKeys.map((key) => (
+                        <FormInput
+                          key={key}
+                          label={toLabel(key)}
+                          placeholder={`Enter ${toLabel(key).toLowerCase()}`}
+                          type={normalizeToken(key).includes('address') ? 'textarea' : 'text'}
+                          value={customFields[key] || ''}
+                          onChange={(e) => setCustomFields((prev) => ({ ...prev, [key]: e.target.value }))}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-600">
+                      This template does not define additional custom fields.
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <div className="flex items-center gap-4">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#EAF1FF] text-sm font-semibold text-[#0052CC]">
+                    04
+                  </div>
                   <h2 className="text-lg font-semibold text-gray-900">Letter Purpose</h2>
                 </div>
                 <div className="space-y-6">
@@ -280,9 +437,13 @@ Thank you for your time and consideration. Please feel free to reach out if you 
                     />
                   </div>
                   <FormInput
-                    label="Main Points & Content"
+                    label={template?.content ? "Additional Notes (Optional)" : "Main Points & Content"}
                     type="textarea"
-                    placeholder="Outline the core of your request here. Our AI will weave these into a polished narrative..."
+                    placeholder={
+                      template?.content
+                        ? "Add any extra details not already covered by the template body..."
+                        : "Outline the core of your request here. Our AI will weave these into a polished narrative..."
+                    }
                     value={letterPurpose.body}
                     onChange={(e) => setLetterPurpose({ ...letterPurpose, body: e.target.value })}
                   />
@@ -326,7 +487,9 @@ Thank you for your time and consideration. Please feel free to reach out if you 
 
                   <div className="border-t border-gray-200 pt-5">
                     <p className="text-gray-900">{recipientDetails.name ? `Dear ${recipientDetails.name},` : "Dear [Recipient Name],"}</p>
-                    <div className="mt-3 text-gray-900 whitespace-pre-line">{previewBody}</div>
+                    <div className="mt-3 text-gray-900 whitespace-pre-line">
+                      {template?.content ? renderedTemplateBody || "Fill the template fields to preview your full letter body." : previewBody}
+                    </div>
                   </div>
 
                   <div className="pt-4">

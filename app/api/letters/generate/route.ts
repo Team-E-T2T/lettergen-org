@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createDraft, getTemplateById } from '@/lib/db';
+import { createDraft } from '@/lib/db';
+import { getTemplate } from '@/lib/api';
 
 export async function POST(request: NextRequest) {
+  const requestId = `gen_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
   try {
     const body = await request.json();
 
@@ -17,7 +19,17 @@ export async function POST(request: NextRequest) {
       letterTone,
       preferredClosing,
       mainPoints,
+      useTemplateBody,
     } = body;
+
+    console.info(`[${requestId}] POST /api/letters/generate request`, {
+      templateId,
+      senderFullName: senderFullName ? '[provided]' : '[missing]',
+      recipientName: recipientName ? '[provided]' : '[missing]',
+      subjectLine: subjectLine ? '[provided]' : '[missing]',
+      mainPointsLength: typeof mainPoints === 'string' ? mainPoints.length : 0,
+      useTemplateBody: Boolean(useTemplateBody),
+    });
 
     // Validate required fields
     if (
@@ -32,9 +44,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get template
-    const template = getTemplateById(templateId);
+    // Resolve template from the same backend source as /api/templates/:id.
+    const template = await getTemplate(templateId);
     if (!template) {
+      console.warn(`[${requestId}] Template not found`, { templateId });
       return NextResponse.json(
         { success: false, error: 'Template not found' },
         { status: 404 }
@@ -51,11 +64,15 @@ export async function POST(request: NextRequest) {
       ? mainPoints.trim()
       : 'Please let me know how we can move forward together on the items described in the subject line.';
 
+    const normalizedClosing =
+      typeof preferredClosing === 'string' ? preferredClosing.trim().toLowerCase() : '';
     const closing =
-      preferredClosing === 'best'
+      normalizedClosing === 'best' || normalizedClosing === 'best regards'
         ? 'Best regards,'
-        : preferredClosing === 'respectfully'
+        : normalizedClosing === 'respectfully'
         ? 'Respectfully,'
+        : normalizedClosing
+        ? `${preferredClosing.toString().trim().replace(/,+$/, '')},`
         : 'Sincerely,';
 
     const letterDate = new Date().toLocaleDateString('en-US', {
@@ -64,7 +81,13 @@ export async function POST(request: NextRequest) {
       year: 'numeric',
     });
 
-    const contentHtml = `
+    const contentHtml = useTemplateBody
+      ? `
+      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; white-space: pre-wrap;">
+        ${requestText || 'No content provided.'}
+      </div>
+    `.trim()
+      : `
       <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
         <p><strong>${senderMailingAddress || 'Your Address'}</strong></p>
         <p>${letterDate}</p>
@@ -104,6 +127,12 @@ export async function POST(request: NextRequest) {
       }
     );
 
+    console.info(`[${requestId}] Draft generated`, {
+      draftId: draft.draftId,
+      templateId,
+      wordCount: draft.wordCount,
+    });
+
     return NextResponse.json(
       {
         success: true,
@@ -119,7 +148,7 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
-    console.error('POST /letters/generate error:', error);
+    console.error(`[${requestId}] POST /api/letters/generate error:`, error);
     return NextResponse.json(
       { success: false, error: 'Failed to generate letter' },
       { status: 500 }

@@ -73,6 +73,22 @@ export default function NewLetterForm({ template }: Props) {
 
       const data = await response.json();
       if (data.success && data.draftId) {
+        // Store the generated draft data in sessionStorage so preview can use it immediately
+        // This ensures contentHtml is available even if backend GET doesn't return it
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem(
+            `draft_${data.draftId}`,
+            JSON.stringify({
+              draftId: data.draftId,
+              documentName: data.documentName || 'Generated Letter',
+              contentHtml: data.contentHtml || '',
+              templateName: data.template?.title || '',
+              category: data.template?.category || '',
+              lastEditedAt: data.createdAt || new Date().toISOString(),
+              wordCount: data.wordCount || 0,
+            })
+          );
+        }
         router.push(`/preview?draftId=${data.draftId}`);
       } else {
         setGenerationError('Invalid response from server');

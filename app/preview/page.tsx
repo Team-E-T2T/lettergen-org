@@ -46,10 +46,32 @@ function PreviewEditPageContent() {
 
     const fetchDraft = async () => {
       try {
-        const response = await fetch(`/api/letters/${draftId}`);
-        if (!response.ok) throw new Error('Failed to fetch draft');
-        const data = await response.json();
-        const initialContent = data.contentHtml || '';
+        // First try to get draft from sessionStorage (set immediately after generation)
+        let data: Draft | null = null;
+        
+        if (typeof window !== 'undefined') {
+          const cached = sessionStorage.getItem(`draft_${draftId}`);
+          if (cached) {
+            try {
+              data = JSON.parse(cached);
+              console.log('Loaded draft from sessionStorage');
+            } catch (e) {
+              console.error('Failed to parse cached draft:', e);
+            }
+          }
+        }
+
+        // If not in sessionStorage, fetch from API
+        if (!data) {
+          const response = await fetch(`/api/letters/${draftId}`);
+          if (!response.ok) throw new Error('Failed to fetch draft');
+          data = await response.json();
+          console.log('Loaded draft from API');
+        }
+
+        if (!data) throw new Error('No draft data');
+
+        const initialContent = (data as Draft).contentHtml || '';
         setDraft(data);
         setContentHtml(initialContent);
         if (editorRef.current) {

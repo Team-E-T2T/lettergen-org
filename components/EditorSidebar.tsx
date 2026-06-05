@@ -79,9 +79,9 @@ export default function EditorSidebar({ draftId, documentName = 'Letter', conten
             />
           </div>
           <button
-            onClick={handleSaveDocument}
+            
             disabled={!draftId || isSaving}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-brand-blue px-6 py-3 text-sm font-semibold text-white transition hover:bg-brand-blue/90 disabled:bg-gray-400 disabled:cursor-not-allowed"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#2563eb] px-6 py-3 text-sm font-semibold text-white transition hover:bg-brand-blue/90 disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
             <span className="text-base">💾</span>
             {isSaving ? 'Saving...' : 'Save Document'}

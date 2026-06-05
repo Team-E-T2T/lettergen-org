@@ -235,7 +235,7 @@ Thank you for your time and consideration. Please feel free to reach out if you 
       return;
     }
 
-    const payload = {
+    const payload: Record<string, string> = {
       templateId,
       senderFullName: senderInfo.fullName.trim(),
       senderEmail: senderInfo.email.trim(),

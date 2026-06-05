@@ -122,11 +122,13 @@ function PreviewEditPageContent() {
     fetchDraft();
   }, [draftId]);
 
+  // Only initialize editor content once from fetch, not on every keystroke
+  const isInitialized = useRef(false);
   useEffect(() => {
-    if (!editorRef.current) return;
-    if (editorRef.current.innerHTML === contentHtml) return;
+    if (!draft || isInitialized.current || !editorRef.current) return;
     editorRef.current.innerHTML = contentHtml;
-  }, [contentHtml]);
+    isInitialized.current = true;
+  }, [draft, contentHtml]);
 
   const handleToolbarClick = (action: (typeof toolbarActions)[0]) => {
     setActiveFormat(action.label);
@@ -211,7 +213,6 @@ function PreviewEditPageContent() {
                   className="min-h-[680px] rounded-[24px] border border-brand-border bg-white p-8 text-sm leading-7 text-gray-900 shadow-sm font-sans"
                   contentEditable
                   suppressContentEditableWarning
-                  dangerouslySetInnerHTML={{ __html: contentHtml }}
                   onInput={(e) => handleContentChange(e.currentTarget.innerHTML)}
                 />
               </div>

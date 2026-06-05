@@ -5,7 +5,7 @@ import Footer from "./components/Footer";
 import Providers from "./providers";
 
 export const metadata: Metadata = {
-  title: "LetterFlow",
+  title: "LetterGen",
   description: "Generate professional letters in seconds",
 };
 

@@ -2,7 +2,7 @@
 
 **Status**: ❌ **NOT IMPLEMENTED** – No API routes exist yet  
 **Date**: May 22, 2026  
-**Project**: LetterFlow
+**Project**: LetterGen
 
 ---
 

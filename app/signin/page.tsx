@@ -17,7 +17,7 @@ function SignInPageContent() {
           {/* Header */}
           <div className="mb-8 space-y-2 text-center">
             <h1 className="text-3xl font-bold text-slate-900">Welcome Back</h1>
-            <p className="text-slate-600">Sign in to LetterFlow to get started</p>
+            <p className="text-slate-600">Sign in to LetterGen to get started</p>
           </div>
 
           {/* Error Message */}

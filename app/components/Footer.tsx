@@ -4,8 +4,8 @@ export default function Footer() {
       <div className="mx-auto max-w-6xl px-6 py-8 text-sm text-slate-600">
         <div className="flex flex-col items-center justify-between gap-6 sm:flex-row">
           <div className="text-center sm:text-left">
-            <div className="text-lg font-semibold text-slate-900">LetterFlow</div>
-            <div className="mt-1">© 2026 LetterFlow. The Editorial Architect.</div>
+            <div className="text-lg font-semibold text-slate-900">LetterGen</div>
+            <div className="mt-1">© 2026 LetterGen. The Editorial Architect.</div>
           </div>
 
           <div className="flex flex-wrap gap-4">

@@ -11,7 +11,7 @@ export default function Header() {
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-6 px-6 py-4">
         <div className="flex items-center gap-4">
           <Link href="/" className="text-primary-600 text-xl font-bold" style={{ color: 'rgb(var(--color-primary))' }}>
-            LetterFlow
+            LetterGen
           </Link>
         </div>
 

@@ -459,7 +459,7 @@ Thank you for your time and consideration. Please feel free to reach out if you 
               >
                 {isGenerating ? "Generating..." : "Generate Letter"}
               </button>
-              <p className="text-xs text-gray-500">LetterFlow AI will optimize for clarity and tone.</p>
+              <p className="text-xs text-gray-500">LetterGen AI will optimize for clarity and tone.</p>
             </div>
           </section>
 

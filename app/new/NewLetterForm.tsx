@@ -98,8 +98,8 @@ export default function NewLetterForm({ template }: Props) {
           const verifyData = verify ? JSON.parse(verify) : null;
           console.log('[NewLetterForm] Verified localStorage storage:', {
             stored: !!verify,
-            contentHtmlMatch: verifyData?.contentHtmlLength === draftData.contentHtmlLength,
-            contentHtmlLength: verifyData?.contentHtmlLength || 0,
+             contentHtmlMatch: verifyData?.contentHtml?.length === draftData.contentHtml.length,
+             contentHtmlLength: verifyData?.contentHtml?.length || 0,
           });
         }
         console.log('[NewLetterForm] Redirecting to preview with draftId:', data.draftId);

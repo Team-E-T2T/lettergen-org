@@ -64,11 +64,13 @@ function PreviewEditPageContent() {
             try {
               data = JSON.parse(cached);
               source = 'localStorage';
-              console.log('[Preview] Loaded draft from localStorage:', {
-                draftId,
-                contentHtmlLength: data.contentHtml?.length || 0,
-                documentName: data.documentName,
-              });
+               if (data) {
+                 console.log('[Preview] Loaded draft from localStorage:', {
+                   draftId,
+                   contentHtmlLength: data.contentHtml?.length || 0,
+                   documentName: data.documentName,
+                 });
+               }
             } catch (e) {
               console.error('[Preview] Failed to parse cached draft:', e);
             }

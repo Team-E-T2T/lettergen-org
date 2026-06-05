@@ -11,16 +11,32 @@ export async function GET(
 ) {
   try {
     const { draftId } = await params;
+    console.log(`[GET /api/letters/${draftId}] Request started`);
 
     // First try backend for generated drafts persisted outside local memory.
     const backendUrl = `${BACKEND_URL}/letters/${encodeURIComponent(draftId)}`;
+    console.log(`[GET /api/letters/${draftId}] Fetching from backend:`, backendUrl);
+
     const backendResponse = await fetch(backendUrl, {
       cache: 'no-store',
       headers: { 'Content-Type': 'application/json' },
     });
 
+    console.log(`[GET /api/letters/${draftId}] Backend response status:`, backendResponse.status);
+
     if (backendResponse.ok) {
       const backendDraft = await backendResponse.json();
+      console.log(`[GET /api/letters/${draftId}] Backend draft received:`, {
+        draftId: backendDraft.draftId,
+        hasContentHtml: !!backendDraft.contentHtml,
+        contentHtmlLength: backendDraft.contentHtml?.length || 0,
+        keys: Object.keys(backendDraft),
+      });
+
+      if (!backendDraft.contentHtml) {
+        console.warn(`[GET /api/letters/${draftId}] WARNING: Backend draft missing contentHtml`);
+      }
+
       return NextResponse.json(
         {
           success: true,
@@ -36,15 +52,23 @@ export async function GET(
       );
     }
 
+    console.log(`[GET /api/letters/${draftId}] Backend returned ${backendResponse.status}, trying local fallback`);
+
     // Fallback for local dev drafts that may exist only in-memory.
     const draft = getDraftById(draftId);
 
     if (!draft) {
+      console.log(`[GET /api/letters/${draftId}] Draft not found in backend or local DB`);
       return NextResponse.json(
         { success: false, error: 'Draft not found' },
         { status: 404 }
       );
     }
+
+    console.log(`[GET /api/letters/${draftId}] Found in local DB:`, {
+      draftId: draft.draftId,
+      contentHtmlLength: draft.contentHtml?.length || 0,
+    });
 
     return NextResponse.json(
       {

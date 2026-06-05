@@ -72,23 +72,37 @@ export default function NewLetterForm({ template }: Props) {
       }
 
       const data = await response.json();
+      console.log('[NewLetterForm] Generate response:', {
+        success: data.success,
+        draftId: data.draftId,
+        hasContentHtml: !!data.contentHtml,
+        contentHtmlLength: data.contentHtml?.length || 0,
+      });
+
       if (data.success && data.draftId) {
-        // Store the generated draft data in sessionStorage so preview can use it immediately
-        // This ensures contentHtml is available even if backend GET doesn't return it
+        // Store the generated draft data in localStorage (persists across sessions)
         if (typeof window !== 'undefined') {
-          sessionStorage.setItem(
-            `draft_${data.draftId}`,
-            JSON.stringify({
-              draftId: data.draftId,
-              documentName: data.documentName || 'Generated Letter',
-              contentHtml: data.contentHtml || '',
-              templateName: data.template?.title || '',
-              category: data.template?.category || '',
-              lastEditedAt: data.createdAt || new Date().toISOString(),
-              wordCount: data.wordCount || 0,
-            })
-          );
+          const draftData = {
+            draftId: data.draftId,
+            documentName: data.documentName || 'Generated Letter',
+            contentHtml: data.contentHtml || '',
+            templateName: data.template?.title || '',
+            category: data.template?.category || '',
+            lastEditedAt: data.createdAt || new Date().toISOString(),
+            wordCount: data.wordCount || 0,
+          };
+          localStorage.setItem(`draft_${data.draftId}`, JSON.stringify(draftData));
+          
+          // Verify it was stored correctly
+          const verify = localStorage.getItem(`draft_${data.draftId}`);
+          const verifyData = verify ? JSON.parse(verify) : null;
+          console.log('[NewLetterForm] Verified localStorage storage:', {
+            stored: !!verify,
+            contentHtmlMatch: verifyData?.contentHtmlLength === draftData.contentHtmlLength,
+            contentHtmlLength: verifyData?.contentHtmlLength || 0,
+          });
         }
+        console.log('[NewLetterForm] Redirecting to preview with draftId:', data.draftId);
         router.push(`/preview?draftId=${data.draftId}`);
       } else {
         setGenerationError('Invalid response from server');

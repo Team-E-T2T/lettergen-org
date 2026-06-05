@@ -83,7 +83,17 @@ export async function POST(request: NextRequest) {
     console.info(`[${requestId}] Draft generated via backend`, {
       draftId: backendData.draftId,
       templateId,
+      hasContentHtml: !!backendData.contentHtml,
+      contentHtmlLength: backendData.contentHtml?.length || 0,
     });
+
+    // Log warning if contentHtml is missing
+    if (!backendData.contentHtml) {
+      console.warn(`[${requestId}] WARNING: Backend returned draft without contentHtml!`, {
+        draftId: backendData.draftId,
+        keys: Object.keys(backendData),
+      });
+    }
 
     return NextResponse.json(
       {

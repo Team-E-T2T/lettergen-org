@@ -44,34 +44,67 @@ function PreviewEditPageContent() {
       return;
     }
 
+    console.log('[Preview] Starting fetch for draftId:', draftId);
+
     const fetchDraft = async () => {
       try {
-        // First try to get draft from sessionStorage (set immediately after generation)
+        // First try to get draft from localStorage
         let data: Draft | null = null;
-        
+        let source = 'none';
+
         if (typeof window !== 'undefined') {
-          const cached = sessionStorage.getItem(`draft_${draftId}`);
+          const cached = localStorage.getItem(`draft_${draftId}`);
+          console.log('[Preview] Checking localStorage:', {
+            draftId,
+            found: !!cached,
+            cacheKeys: Object.keys(localStorage).filter((k) => k.startsWith('draft_')),
+          });
+
           if (cached) {
             try {
               data = JSON.parse(cached);
-              console.log('Loaded draft from sessionStorage');
+              source = 'localStorage';
+              console.log('[Preview] Loaded draft from localStorage:', {
+                draftId,
+                contentHtmlLength: data.contentHtml?.length || 0,
+                documentName: data.documentName,
+              });
             } catch (e) {
-              console.error('Failed to parse cached draft:', e);
+              console.error('[Preview] Failed to parse cached draft:', e);
             }
           }
         }
 
-        // If not in sessionStorage, fetch from API
+        // If not in localStorage, fetch from API
         if (!data) {
+          console.log('[Preview] Fetching from API:', draftId);
           const response = await fetch(`/api/letters/${draftId}`);
-          if (!response.ok) throw new Error('Failed to fetch draft');
-          data = await response.json();
-          console.log('Loaded draft from API');
+          console.log('[Preview] API response status:', response.status);
+
+          if (!response.ok) throw new Error(`API returned ${response.status}`);
+
+          const apiData = await response.json();
+          console.log('[Preview] API response data:', {
+            draftId: apiData.draftId,
+            contentHtmlLength: apiData.contentHtml?.length || 0,
+            documentName: apiData.documentName,
+            success: apiData.success,
+          });
+
+          data = apiData;
+          source = 'api';
         }
 
-        if (!data) throw new Error('No draft data');
+        if (!data || !data.contentHtml) {
+          console.error('[Preview] Draft has no contentHtml!', {
+            data,
+            source,
+          });
+          throw new Error('Draft content is empty');
+        }
 
-        const initialContent = (data as Draft).contentHtml || '';
+        console.log('[Preview] Successfully loaded draft content from', source);
+        const initialContent = data.contentHtml || '';
         setDraft(data);
         setContentHtml(initialContent);
         if (editorRef.current) {
@@ -79,8 +112,8 @@ function PreviewEditPageContent() {
         }
         setError('');
       } catch (err) {
-        console.error('Failed to fetch draft:', err);
-        setError('Failed to load draft');
+        console.error('[Preview] Error loading draft:', err);
+        setError(`Failed to load draft: ${err}`);
         setDraft(null);
       } finally {
         setLoading(false);

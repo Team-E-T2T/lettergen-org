@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import FormInput from '@/components/FormInput';
@@ -14,6 +14,8 @@ type Props = {
 export default function NewLetterForm({ template }: Props) {
   const router = useRouter();
   const { formData, updateFormData } = useFormData();
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generationError, setGenerationError] = useState('');
 
   // Persist the templateId into form state so the generate step can use it.
   useEffect(() => {
@@ -21,8 +23,66 @@ export default function NewLetterForm({ template }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [template.id]);
 
-  const handleGenerate = () => {
-    router.push('/preview');
+  const handleGenerate = async () => {
+    // Validate required fields
+    if (!formData.fullName?.trim()) {
+      setGenerationError('Full name is required');
+      return;
+    }
+    if (!formData.recipientName?.trim()) {
+      setGenerationError('Recipient name is required');
+      return;
+    }
+    if (!formData.recipientAddress?.trim()) {
+      setGenerationError('Recipient address is required');
+      return;
+    }
+    if (!formData.subjectLine?.trim()) {
+      setGenerationError('Subject line is required');
+      return;
+    }
+
+    setIsGenerating(true);
+    setGenerationError('');
+
+    try {
+      const response = await fetch('/api/letters/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          templateId: formData.templateId,
+          senderFullName: formData.fullName,
+          senderEmail: formData.email,
+          senderMailingAddress: formData.mailingAddress,
+          recipientName: formData.recipientName,
+          recipientOrganization: formData.company,
+          recipientAddress: formData.recipientAddress,
+          subjectLine: formData.subjectLine,
+          letterTone: formData.letterTone,
+          preferredClosing: formData.preferredClosing,
+          mainPoints: formData.letterBody,
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        setGenerationError(data.error || 'Failed to generate letter');
+        setIsGenerating(false);
+        return;
+      }
+
+      const data = await response.json();
+      if (data.success && data.draftId) {
+        router.push(`/preview?draftId=${data.draftId}`);
+      } else {
+        setGenerationError('Invalid response from server');
+        setIsGenerating(false);
+      }
+    } catch (err) {
+      console.error('Generate error:', err);
+      setGenerationError('Network error: Unable to generate letter');
+      setIsGenerating(false);
+    }
   };
 
   // Map the backend's defaultToneOptions array → <select> options.
@@ -184,11 +244,17 @@ export default function NewLetterForm({ template }: Props) {
             </div>
 
             <div className="mt-10 flex flex-col gap-3">
+              {generationError && (
+                <div className="text-sm text-red-600 bg-red-50 p-3 rounded">
+                  {generationError}
+                </div>
+              )}
               <button
                 onClick={handleGenerate}
-                className="inline-flex items-center justify-center rounded-full bg-[#0052CC] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#003EA1] max-w-fit"
+                disabled={isGenerating}
+                className="inline-flex items-center justify-center rounded-full bg-[#0052CC] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#003EA1] disabled:bg-gray-400 disabled:cursor-not-allowed max-w-fit"
               >
-                Generate Letter
+                {isGenerating ? 'Generating...' : 'Generate Letter'}
               </button>
               <p className="text-xs text-gray-500">LetterGen AI will optimize for clarity and tone.</p>
             </div>

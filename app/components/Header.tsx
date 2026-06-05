@@ -34,6 +34,13 @@ export default function Header() {
                   <span className="text-sm text-slate-600">
                     Welcome, {session.user.name}
                   </span>
+                  <Link
+                    href="/new"
+                    className="rounded-full px-4 py-2 text-sm font-semibold text-white"
+                    style={{ background: 'linear-gradient(135deg,#2563EB,#1D4ED8)' }}
+                  >
+                    Create Letter
+                  </Link>
                   <button
                     onClick={() => signOut({ callbackUrl: "/" })}
                     className="text-sm text-slate-600 hover:underline"

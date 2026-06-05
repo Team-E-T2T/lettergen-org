@@ -10,13 +10,13 @@ export async function POST(request: NextRequest) {
     const {
       templateId,
       senderFullName,
-      senderEmail,
+
       senderMailingAddress,
       recipientName,
       recipientOrganization,
-      recipientAddress,
+
       subjectLine,
-      letterTone,
+
       preferredClosing,
       mainPoints,
       useTemplateBody,
@@ -31,49 +31,38 @@ export async function POST(request: NextRequest) {
       useTemplateBody: Boolean(useTemplateBody),
     });
 
-    // Validate required fields
-    if (
-      !templateId ||
-      !senderFullName ||
-      !recipientName ||
-      !subjectLine
-    ) {
+    // Validate required fields (templateId is optional for blank letters)
+    if (!senderFullName || !recipientName || !subjectLine) {
       return NextResponse.json(
         { success: false, error: 'Missing required fields' },
         { status: 400 }
       );
     }
 
-    // Resolve template from the same backend source as /api/templates/:id.
-    const template = await getTemplate(templateId);
-    if (!template) {
-      console.warn(`[${requestId}] Template not found`, { templateId });
-      return NextResponse.json(
-        { success: false, error: 'Template not found' },
-        { status: 404 }
-      );
+    // Resolve template only if a templateId was provided
+    let template = null;
+    if (templateId) {
+      template = await getTemplate(templateId);
+      if (!template) {
+        console.warn(`[${requestId}] Template not found`, { templateId });
+        return NextResponse.json(
+          { success: false, error: 'Template not found' },
+          { status: 404 }
+        );
+      }
     }
 
-    // Generate letter content
-    const opening =
-      letterTone === 'friendly'
-        ? 'I hope you are doing well as you read this request.'
-        : 'I am contacting you to formally request your attention and support on the following matter.';
+    const requestText = mainPoints?.trim()
+      || 'Please let me know how we can move forward on the items described in the subject line.';
 
-    const requestText = mainPoints
-      ? mainPoints.trim()
-      : 'Please let me know how we can move forward together on the items described in the subject line.';
-
-    const normalizedClosing =
-      typeof preferredClosing === 'string' ? preferredClosing.trim().toLowerCase() : '';
-    const closing =
-      normalizedClosing === 'best' || normalizedClosing === 'best regards'
-        ? 'Best regards,'
-        : normalizedClosing === 'respectfully'
-        ? 'Respectfully,'
-        : normalizedClosing
-        ? `${preferredClosing.toString().trim().replace(/,+$/, '')},`
-        : 'Sincerely,';
+    const rawClosing = typeof preferredClosing === 'string' ? preferredClosing.trim() : '';
+    const normalizedClosing = rawClosing.toLowerCase().replace(/,+$/, '');
+    const closingWord =
+      normalizedClosing === 'best' || normalizedClosing === 'best regards' ? 'Best Regards'
+      : normalizedClosing === 'respectfully' ? 'Respectfully'
+      : normalizedClosing === 'sincerely' ? 'Sincerely'
+      : rawClosing.replace(/,+$/, '') || 'Sincerely';
+    const closing = `${closingWord},`;
 
     const letterDate = new Date().toLocaleDateString('en-US', {
       month: 'long',
@@ -81,49 +70,37 @@ export async function POST(request: NextRequest) {
       year: 'numeric',
     });
 
+    const toLine = recipientOrganization
+      ? `${recipientOrganization}`
+      : recipientName;
+
+    const senderBlock = [senderFullName, senderMailingAddress].filter(Boolean).join('<br/>');
+
     const contentHtml = useTemplateBody
-      ? `
-      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; white-space: pre-wrap;">
-        ${requestText || 'No content provided.'}
-      </div>
-    `.trim()
-      : `
-      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-        <p><strong>${senderMailingAddress || 'Your Address'}</strong></p>
-        <p>${letterDate}</p>
-        
-        <p><strong>${recipientName || 'Recipient Name'}</strong><br/>
-        ${recipientOrganization || 'Company/Organization'}<br/>
-        ${recipientAddress || 'Recipient Address'}</p>
-        
-        <p><strong>Subject: ${subjectLine}</strong></p>
-        
-        <p>Dear ${recipientName || '[Recipient Name]'},</p>
-        
-        <p>${opening}</p>
-        
-        <p>${requestText}</p>
-        
-        <p>Thank you for your time and consideration. Please feel free to reach out if you need any clarification or additional details.</p>
-        
-        <p>${closing}<br/>
-        ${senderFullName}<br/>
-        ${senderEmail}</p>
-      </div>
-    `.trim();
+      ? `<div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; white-space: pre-wrap;">${requestText}</div>`
+      : `<div style="font-family: Arial, sans-serif; line-height: 1.8; color: #333; max-width: 680px; padding: 32px;">
+<p style="text-align: left; margin: 0 0 24px 0;">Date: ${letterDate}</p>
+<p style="margin: 0 0 16px 0;">To: ${toLine}</p>
+<p style="margin: 0 0 24px 0;"><strong>Subject: ${subjectLine}</strong></p>
+<p style="margin: 0 0 16px 0;">Dear ${recipientName},</p>
+<p style="margin: 0 0 16px 0;">${requestText}</p>
+<p style="margin: 0 0 24px 0;">Thank you.</p>
+<p style="margin: 0 0 8px 0;">${closing}</p>
+<p style="margin: 0;">${senderBlock}</p>
+</div>`;
 
     const contentText = contentHtml.replace(/<[^>]*>/g, '').trim();
 
     // Create draft
     const draft = createDraft(
-      templateId,
+      templateId || 'blank',
       `Letter_${Date.now()}`,
       contentHtml,
       contentText,
       {
-        id: template.id,
-        title: template.title,
-        category: template.category,
+        id: template?.id || 'blank',
+        title: template?.title || 'Blank Letter',
+        category: template?.category || 'General',
       }
     );
 

@@ -205,11 +205,6 @@ Thank you for your time and consideration. Please feel free to reach out if you 
   );
 
   const handleGenerate = async () => {
-    if (!templateId) {
-      alert("Template ID is required");
-      return;
-    }
-
     if (!senderInfo.fullName || !recipientDetails.name || !letterPurpose.subject) {
       alert("Please fill in Full Name, Recipient Name, and Subject Line");
       return;
@@ -437,13 +432,9 @@ Thank you for your time and consideration. Please feel free to reach out if you 
                     />
                   </div>
                   <FormInput
-                    label={template?.content ? "Additional Notes (Optional)" : "Main Points & Content"}
+                    label="Main Points & Content"
                     type="textarea"
-                    placeholder={
-                      template?.content
-                        ? "Add any extra details not already covered by the template body..."
-                        : "Outline the core of your request here. Our AI will weave these into a polished narrative..."
-                    }
+                    placeholder="Outline the core of your request here. Our AI will weave these into a polished narrative..."
                     value={letterPurpose.body}
                     onChange={(e) => setLetterPurpose({ ...letterPurpose, body: e.target.value })}
                   />

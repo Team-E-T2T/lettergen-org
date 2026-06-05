@@ -13,6 +13,23 @@ export default function EditorSidebar({ draftId, documentName = 'Letter', conten
   const [saveStatus, setSaveStatus] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
+  const buildDownloadUrl = (urlFromApi: string, currentDraftId: string, format: 'pdf' | 'docx', name: string) => {
+    if (!urlFromApi) {
+      return `/api/download/${encodeURIComponent(currentDraftId)}?format=${encodeURIComponent(format)}&name=${encodeURIComponent(name)}`;
+    }
+
+    try {
+      const parsed = new URL(urlFromApi, window.location.origin);
+      if (parsed.origin === window.location.origin) {
+        return parsed.toString();
+      }
+    } catch {
+      // Fall back to same-origin proxy URL below.
+    }
+
+    return `/api/download/${encodeURIComponent(currentDraftId)}?format=${encodeURIComponent(format)}&name=${encodeURIComponent(name)}`;
+  };
+
   const handleSaveDocument = async () => {
     if (!draftId) {
       alert('No draft loaded');
@@ -78,7 +95,8 @@ export default function EditorSidebar({ draftId, documentName = 'Letter', conten
         throw new Error('Export response did not include a valid downloadUrl');
       }
 
-      window.open(data.downloadUrl, '_blank', 'noopener,noreferrer');
+      const downloadUrl = buildDownloadUrl(data.downloadUrl, draftId, 'pdf', docName);
+      window.open(downloadUrl, '_blank', 'noopener,noreferrer');
     } catch (error) {
       console.error('PDF export error:', error);
       alert(`Failed to export PDF: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -117,7 +135,8 @@ export default function EditorSidebar({ draftId, documentName = 'Letter', conten
         throw new Error('Export response did not include a valid downloadUrl');
       }
 
-      window.open(data.downloadUrl, '_blank', 'noopener,noreferrer');
+      const downloadUrl = buildDownloadUrl(data.downloadUrl, draftId, 'docx', docName);
+      window.open(downloadUrl, '_blank', 'noopener,noreferrer');
     } catch (error) {
       console.error('DOCX export error:', error);
       alert(`Failed to export DOCX: ${error instanceof Error ? error.message : 'Unknown error'}`);

@@ -46,61 +46,21 @@ export default function EditorSidebar({ draftId, documentName = 'Letter', conten
     }
   };
 
-  const handlePDFExport = async () => {
-    if (!draftId) {
-      alert('No draft loaded');
+  const handlePDFExport = () => {
+    if (!contentHtml) {
+      alert('No content to export');
       return;
     }
-
-    try {
-      const response = await fetch(`/api/letters/${draftId}/export`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          format: 'pdf',
-          fileName: docName,
-        }),
-      });
-
-      if (!response.ok) throw new Error('Export failed');
-
-      const data = await response.json();
-      if (data.downloadUrl) {
-        window.open(data.downloadUrl, '_blank');
-      }
-    } catch (error) {
-      console.error('PDF export error:', error);
-      alert('Failed to export PDF');
-    }
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+    printWindow.document.write(`<!DOCTYPE html><html><head><title>${docName}</title>
+      <style>body{font-family:Arial,sans-serif;padding:48px;line-height:1.6;color:#222;}@media print{body{padding:0;}}</style>
+      </head><body>${contentHtml}</body></html>`);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
   };
 
-  const handleDOCXExport = async () => {
-    if (!draftId) {
-      alert('No draft loaded');
-      return;
-    }
-
-    try {
-      const response = await fetch(`/api/letters/${draftId}/export`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          format: 'docx',
-          fileName: docName,
-        }),
-      });
-
-      if (!response.ok) throw new Error('Export failed');
-
-      const data = await response.json();
-      if (data.downloadUrl) {
-        window.open(data.downloadUrl, '_blank');
-      }
-    } catch (error) {
-      console.error('DOCX export error:', error);
-      alert('Failed to export DOCX');
-    }
-  };
 
   return (
     <aside className="space-y-6">
@@ -136,20 +96,13 @@ export default function EditorSidebar({ draftId, documentName = 'Letter', conten
               <p className="text-xs font-semibold uppercase tracking-[0.22em] text-gray-500">
                 Export Options
               </p>
-              <div className="mt-4 grid grid-cols-2 gap-3">
+              <div className="mt-4">
                 <button
                   onClick={handlePDFExport}
                   disabled={!draftId}
-                  className="inline-flex items-center justify-center rounded-full border border-brand-border bg-white px-4 py-3 text-sm font-semibold text-gray-700 transition hover:border-gray-300 hover:bg-gray-50 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  className="inline-flex w-full items-center justify-center rounded-full border border-brand-border bg-white px-4 py-3 text-sm font-semibold text-gray-700 transition hover:border-gray-300 hover:bg-gray-50 disabled:bg-gray-100 disabled:cursor-not-allowed"
                 >
                   📄 PDF Export
-                </button>
-                <button
-                  onClick={handleDOCXExport}
-                  disabled={!draftId}
-                  className="inline-flex items-center justify-center rounded-full border border-brand-border bg-white px-4 py-3 text-sm font-semibold text-gray-700 transition hover:border-gray-300 hover:bg-gray-50 disabled:bg-gray-100 disabled:cursor-not-allowed"
-                >
-                  📋 DOCX Format
                 </button>
               </div>
             </div>

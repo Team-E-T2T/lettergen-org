@@ -8,45 +8,20 @@ export async function POST(
   try {
     const { draftId } = await params;
     const body = await request.json();
-
-    const { format, fileName } = body;
+    const { format } = body;
 
     if (!format || !['pdf', 'docx'].includes(format)) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid format. Expected "pdf" or "docx"' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid format' }, { status: 400 });
     }
 
     const draft = getDraftById(draftId);
     if (!draft) {
-      return NextResponse.json(
-        { success: false, error: 'Draft not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Draft not found' }, { status: 404 });
     }
 
-    // In production, you'd use a library like:
-    // - html2pdf or pdfkit for PDF generation
-    // - docx or mammoth for DOCX generation
-    // For now, we'll return a mock download URL
-
-    const mockFileName = fileName || `${draft.documentName}.${format}`;
-    const mockDownloadUrl = `/api/download/${draftId}?format=${format}&name=${encodeURIComponent(mockFileName)}`;
-
-    return NextResponse.json(
-      {
-        success: true,
-        downloadUrl: mockDownloadUrl,
-        fileName: mockFileName,
-      },
-      { status: 200 }
-    );
+    return NextResponse.json({ contentHtml: draft.contentHtml, documentName: draft.documentName });
   } catch (error) {
     console.error('POST /letters/:draftId/export error:', error);
-    return NextResponse.json(
-      { success: false, error: 'Failed to export draft' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to export draft' }, { status: 500 });
   }
 }

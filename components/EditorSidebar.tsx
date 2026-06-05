@@ -62,15 +62,26 @@ export default function EditorSidebar({ draftId, documentName = 'Letter', conten
         }),
       });
 
-      if (!response.ok) throw new Error('Export failed');
+      if (!response.ok) {
+        const errorPayload = await response.json().catch(() => null);
+        throw new Error(errorPayload?.error ?? `Export failed with status ${response.status}`);
+      }
 
       const data = await response.json();
-      if (data.downloadUrl) {
-        window.open(data.downloadUrl, '_blank');
+
+      // Validate export response contract per pdf_download.md
+      if (data.success !== true) {
+        throw new Error('Export response missing success confirmation');
       }
+
+      if (!data.downloadUrl) {
+        throw new Error('Export response did not include a valid downloadUrl');
+      }
+
+      window.open(data.downloadUrl, '_blank', 'noopener,noreferrer');
     } catch (error) {
       console.error('PDF export error:', error);
-      alert('Failed to export PDF');
+      alert(`Failed to export PDF: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
@@ -90,15 +101,26 @@ export default function EditorSidebar({ draftId, documentName = 'Letter', conten
         }),
       });
 
-      if (!response.ok) throw new Error('Export failed');
+      if (!response.ok) {
+        const errorPayload = await response.json().catch(() => null);
+        throw new Error(errorPayload?.error ?? `Export failed with status ${response.status}`);
+      }
 
       const data = await response.json();
-      if (data.downloadUrl) {
-        window.open(data.downloadUrl, '_blank');
+
+      // Validate export response contract per pdf_download.md
+      if (data.success !== true) {
+        throw new Error('Export response missing success confirmation');
       }
+
+      if (!data.downloadUrl) {
+        throw new Error('Export response did not include a valid downloadUrl');
+      }
+
+      window.open(data.downloadUrl, '_blank', 'noopener,noreferrer');
     } catch (error) {
       console.error('DOCX export error:', error);
-      alert('Failed to export DOCX');
+      alert(`Failed to export DOCX: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 

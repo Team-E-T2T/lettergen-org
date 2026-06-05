@@ -222,11 +222,32 @@ This document describes the active HTTP endpoints exposed by `server.py` for fro
 - Response: `200 OK` or `400 Bad Request` / `404 Not Found` / `500 Internal Server Error`
 
 ```json
-{ "downloadUrl": "http://.../downloads/example.pdf" }
+{
+  "success": true,
+  "downloadUrl": "http://.../api/download/example-draft-id?format=pdf&name=example",
+  "fileName": "example"
+}
 ```
 
 - Notes:
   - `500` can occur if export dependencies are missing.
+  - `downloadUrl` is compatibility-shaped for frontend flows that open `/api/download/{draft_id}`.
+  - `fileName` is returned as the stem (without extension).
+
+---
+
+### GET /api/download/{draft_id}
+- Purpose: compatibility download route keyed by draft id
+- Path parameters:
+  - `draft_id`: string
+- Query parameters:
+  - `format`: `pdf` or `docx` (required)
+  - `name`: export file stem used during export (optional)
+- Response: `200 OK` with binary file stream
+
+- Notes:
+  - Returns `400 Bad Request` for unsupported `format` values.
+  - Returns `404 Not Found` if the resolved export file does not exist.
 
 ---
 

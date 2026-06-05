@@ -42,6 +42,31 @@ const toLabel = (key: string) =>
     .replace(/[_-]+/g, " ")
     .replace(/\b\w/g, (char) => char.toUpperCase());
 
+const escapeHtml = (value: string) =>
+  value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+
+const plainTextToHtml = (value: string) => {
+  const normalized = value.trim();
+  if (!normalized) return '<p></p>';
+  return normalized
+    .split(/\n{2,}/)
+    .map((paragraph) => `<p>${escapeHtml(paragraph).replace(/\n/g, '<br />')}</p>`)
+    .join('');
+};
+
+const fieldLabelMap: Record<string, string> = {
+  senderFullName: 'Full Name',
+  recipientName: 'Recipient Name',
+  recipientOrganization: 'Company / Organization',
+  recipientAddress: 'Recipient Address',
+  subjectLine: 'Subject Line',
+};
+
 function NewPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -210,37 +235,43 @@ Thank you for your time and consideration. Please feel free to reach out if you 
       return;
     }
 
-    if (!senderInfo.fullName || !recipientDetails.name || !letterPurpose.subject) {
-      alert("Please fill in Full Name, Recipient Name, and Subject Line");
+    const payload = {
+      templateId,
+      senderFullName: senderInfo.fullName.trim(),
+      senderEmail: senderInfo.email.trim(),
+      senderMailingAddress: senderInfo.address.trim(),
+      recipientName: recipientDetails.name.trim(),
+      recipientOrganization: recipientDetails.company.trim(),
+      recipientAddress: recipientDetails.address.trim(),
+      subjectLine: letterPurpose.subject.trim(),
+      letterTone: letterPurpose.tone,
+      preferredClosing: letterPurpose.closing,
+      mainPoints: template?.content ? renderedTemplateBody : letterPurpose.body,
+    };
+
+    const requiredFields: Array<keyof typeof fieldLabelMap> = [
+      'senderFullName',
+      'recipientName',
+      'recipientOrganization',
+      'recipientAddress',
+      'subjectLine',
+    ];
+
+    const missingRequired = requiredFields.filter((field) => !payload[field]);
+    if (missingRequired.length > 0) {
+      const missingLabels = missingRequired.map((field) => fieldLabelMap[field]).join(', ');
+      alert(`Please fill in: ${missingLabels}`);
       return;
     }
 
     setIsGenerating(true);
     try {
-      const mainPoints = template?.content ? renderedTemplateBody : letterPurpose.body;
-
-      const payload = {
-        templateId,
-        senderFullName: senderInfo.fullName,
-        senderEmail: senderInfo.email,
-        senderMailingAddress: senderInfo.address,
-        recipientName: recipientDetails.name,
-        recipientOrganization: recipientDetails.company,
-        recipientAddress: recipientDetails.address,
-        subjectLine: letterPurpose.subject,
-        letterTone: letterPurpose.tone,
-        preferredClosing: letterPurpose.closing,
-        mainPoints,
-        useTemplateBody: Boolean(template?.content),
-      };
-
       console.info('[new/page] Submitting generate request', {
         templateId,
         subjectLine: payload.subjectLine,
         letterTone: payload.letterTone,
         preferredClosing: payload.preferredClosing,
         mainPointsLength: payload.mainPoints.length,
-        useTemplateBody: payload.useTemplateBody,
       });
 
       const response = await fetch("/api/letters/generate", {
@@ -261,11 +292,47 @@ Thank you for your time and consideration. Please feel free to reach out if you 
           statusText: response.statusText,
           errorDetails,
         });
+
+        const backendMissing =
+          typeof errorDetails === 'object' &&
+          errorDetails !== null &&
+          'missingFields' in errorDetails &&
+          Array.isArray((errorDetails as { missingFields?: unknown }).missingFields)
+            ? ((errorDetails as { missingFields: string[] }).missingFields)
+            : [];
+
+        if (backendMissing.length > 0) {
+          const mapped = backendMissing
+            .map((field) => fieldLabelMap[field] ?? toLabel(field))
+            .join(', ');
+          throw new Error(`Please fill in: ${mapped}`);
+        }
+
         throw new Error("Failed to generate letter");
       }
 
       const data = await response.json();
       const draftId = data.draftId;
+
+      if (template?.content) {
+        const resolvedHtml = plainTextToHtml(renderedTemplateBody);
+        const patchResponse = await fetch(`/api/letters/${draftId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            documentName: data.documentName,
+            contentHtml: resolvedHtml,
+          }),
+        });
+
+        if (!patchResponse.ok) {
+          console.warn('[new/page] Failed to patch resolved template content', {
+            draftId,
+            status: patchResponse.status,
+            statusText: patchResponse.statusText,
+          });
+        }
+      }
 
       console.info('[new/page] Generate request succeeded', {
         draftId,
@@ -280,7 +347,7 @@ Thank you for your time and consideration. Please feel free to reach out if you 
       router.push(`/preview?draftId=${draftId}`);
     } catch (error) {
       console.error("Error generating letter:", error);
-      alert("Failed to generate letter. Please try again.");
+      alert(error instanceof Error ? error.message : "Failed to generate letter. Please try again.");
     } finally {
       setIsGenerating(false);
     }

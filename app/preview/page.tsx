@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Suspense, useState, useEffect } from 'react';
+import { Suspense, useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import EditorSidebar from '@/components/EditorSidebar';
 import ToolbarButton from '@/components/ToolbarButton';
@@ -37,6 +37,7 @@ function PreviewEditPageContent() {
   const [loading, setLoading] = useState(!!draftId);
   const [error, setError] = useState('');
   const [contentHtml, setContentHtml] = useState('');
+  const editorRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (!draftId) {
@@ -48,8 +49,12 @@ function PreviewEditPageContent() {
         const response = await fetch(`/api/letters/${draftId}`);
         if (!response.ok) throw new Error('Failed to fetch draft');
         const data = await response.json();
+        const initialContent = data.contentHtml || '';
         setDraft(data);
-        setContentHtml(data.contentHtml || '');
+        setContentHtml(initialContent);
+        if (editorRef.current) {
+          editorRef.current.innerHTML = initialContent;
+        }
         setError('');
       } catch (err) {
         console.error('Failed to fetch draft:', err);
@@ -141,11 +146,11 @@ function PreviewEditPageContent() {
 
               <div className="rounded-[32px] border border-brand-border bg-white p-8 shadow-sm min-h-[720px]">
                 <div
+                  ref={editorRef}
                   className="min-h-[680px] rounded-[24px] border border-brand-border bg-white p-8 text-sm leading-7 text-gray-900 shadow-sm font-sans"
                   contentEditable
                   suppressContentEditableWarning
                   onInput={(e) => handleContentChange(e.currentTarget.innerHTML)}
-                  dangerouslySetInnerHTML={{ __html: contentHtml }}
                 />
               </div>
             </div>

@@ -21,7 +21,6 @@ export async function POST(request: NextRequest) {
       letterTone,
       preferredClosing,
       mainPoints,
-      useTemplateBody,
     } = body;
 
     console.info(`[${requestId}] POST /api/letters/generate request`, {
@@ -30,7 +29,6 @@ export async function POST(request: NextRequest) {
       recipientName: recipientName ? '[provided]' : '[missing]',
       subjectLine: subjectLine ? '[provided]' : '[missing]',
       mainPointsLength: typeof mainPoints === 'string' ? mainPoints.length : 0,
-      useTemplateBody: Boolean(useTemplateBody),
     });
 
     // Validate required fields
@@ -65,7 +63,6 @@ export async function POST(request: NextRequest) {
         letterTone,
         preferredClosing,
         mainPoints,
-        useTemplateBody,
       }),
     });
 
@@ -73,7 +70,11 @@ export async function POST(request: NextRequest) {
       const errorData = await backendResponse.json().catch(() => ({}));
       console.error(`[${requestId}] Backend error: ${backendResponse.status}`, errorData);
       return NextResponse.json(
-        { success: false, error: errorData.error ?? `Backend error: ${backendResponse.statusText}` },
+        {
+          success: false,
+          error: errorData.error ?? `Backend error: ${backendResponse.statusText}`,
+          missingFields: Array.isArray(errorData.missingFields) ? errorData.missingFields : undefined,
+        },
         { status: backendResponse.status }
       );
     }

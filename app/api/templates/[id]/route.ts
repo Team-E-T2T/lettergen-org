@@ -1,34 +1,35 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getTemplateById } from '@/lib/db';
-
+// 1. Mark the context object as containing a Promise for params
 export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  request: Request,
+  { params }: { params: Promise<{ id: string }> } 
 ) {
   try {
+    // 2. Await the params Promise to unwrap the 'id'
     const { id } = await params;
 
-    const template = getTemplateById(id);
+    const response = await fetch(
+      `https://lettergen-513500384322.us-central1.run.app/templates/${id}`,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
 
-    if (!template) {
-      return NextResponse.json(
-        { success: false, error: 'Template not found' },
-        { status: 404 }
-      );
+    if (!response.ok) {
+      return new Response(JSON.stringify({ error: "Template not found" }), {
+        status: response.status,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
-    return NextResponse.json(
-      {
-        success: true,
-        template,
-      },
-      { status: 200 }
-    );
+    const data = await response.json();
+    return Response.json(data);
+
   } catch (error) {
-    console.error('GET /templates/:id error:', error);
-    return NextResponse.json(
-      { success: false, error: 'Failed to fetch template' },
-      { status: 500 }
-    );
+    return new Response(JSON.stringify({ error: "Internal Server Error" }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 }

@@ -1,28 +1,30 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getAllTemplates } from '@/lib/db';
+import { NextResponse } from 'next/server';
 
-export async function GET(request: NextRequest) {
+export async function GET(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
   try {
-    const searchParams = request.nextUrl.searchParams;
-    const search = searchParams.get('search') || undefined;
-    const category = searchParams.get('category') || undefined;
-    // const page = searchParams.get('page') ? parseInt(searchParams.get('page')!) : 1;
-    // const limit = searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : 10;
+    const { id } = params;
 
-    const templates = getAllTemplates(search, category);
-
-    return NextResponse.json(
-      {
-        success: true,
-        templates,
-        total: templates.length,
-      },
-      { status: 200 }
+    const response = await fetch(
+      `https://lettergen-513500384322.us-central1.run.app/templates/${id}`,
+      { method: 'GET' }
     );
+
+    if (!response.ok) {
+      return NextResponse.json(
+        { success: false, error: 'Template not found' },
+        { status: response.status }
+      );
+    }
+
+    const template = await response.json();
+    return NextResponse.json({ success: true, template }, { status: 200 });
   } catch (error) {
-    console.error('GET /templates error:', error);
+    console.error('GET /templates/:id error:', error);
     return NextResponse.json(
-      { success: false, error: 'Failed to fetch templates' },
+      { success: false, error: 'Failed to fetch template' },
       { status: 500 }
     );
   }
